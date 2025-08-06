@@ -34,6 +34,19 @@ router.post('/register', [
       return res.status(400).json({ error: error.message });
     }
 
+    // Check if email confirmation is required
+    if (!data.session) {
+      return res.status(200).json({
+        message: 'Registration successful. Please check your email to confirm your account.',
+        requiresEmailConfirmation: true,
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata.name
+        }
+      });
+    }
+
     res.status(201).json({
       message: 'User registered successfully',
       user: {

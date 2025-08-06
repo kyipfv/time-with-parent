@@ -245,6 +245,11 @@ function App() {
       const data = await response.json()
 
       if (response.ok) {
+        if (data.requiresEmailConfirmation) {
+          setError('Registration successful! Please check your email to confirm your account, then try logging in.')
+          return
+        }
+        
         if (!data.session || !data.session.access_token) {
           setError('Registration successful but no session token received')
           return
