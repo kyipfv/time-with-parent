@@ -6,6 +6,7 @@ interface User {
   id: string
   email: string
   name: string
+  birth_date?: string
 }
 
 interface Parent {
@@ -83,6 +84,7 @@ function App() {
 
   const [showAppointmentForm, setShowAppointmentForm] = useState(false)
   const [showNoteForm, setShowNoteForm] = useState(false)
+  const [quickNotes, setQuickNotes] = useState<{[parentId: string]: string}>({})
 
   // Check for existing session on load
   useEffect(() => {
@@ -329,25 +331,40 @@ function App() {
   }
 
   const handleDemoMode = () => {
-    // Set up demo user and data
+    // Set up editable demo user and data
     const demoUser = {
       id: 'demo-user-123',
       email: 'demo@parentos.com',
-      name: 'Sarah Johnson'
+      name: 'Alex',
+      birth_date: '1990-06-15'
     }
     
-    const demoParents = [{
-      id: 'demo-parent-1',
-      name: 'Margaret Johnson',
-      birth_date: '1952-04-15', // Makes her 72 years old
-      relationship: 'mom' as const,
-      personality: ['caring', 'independent', 'creative'],
-      interests: ['gardening', 'reading', 'cooking', 'knitting'],
-      challenges: ['technology', 'mobility'],
-      communication_style: 'calls' as const,
-      relationship_goals: ['more quality time', 'help with technology'],
-      last_contact: '2025-01-05T10:30:00Z'
-    }]
+    const demoParents = [
+      {
+        id: 'demo-parent-1',
+        name: 'Mom',
+        birth_date: '1955-03-20',
+        relationship: 'mom' as const,
+        personality: ['caring', 'wise', 'supportive'],
+        interests: ['reading', 'cooking', 'gardening'],
+        challenges: ['technology'],
+        communication_style: 'calls' as const,
+        relationship_goals: ['more quality time'],
+        last_contact: '2025-01-03T10:30:00Z'
+      },
+      {
+        id: 'demo-parent-2',
+        name: 'Dad',
+        birth_date: '1952-08-10',
+        relationship: 'dad' as const,
+        personality: ['funny', 'hardworking', 'practical'],
+        interests: ['sports', 'woodworking', 'history'],
+        challenges: ['hearing'],
+        communication_style: 'calls' as const,
+        relationship_goals: ['share more stories'],
+        last_contact: '2025-01-01T15:00:00Z'
+      }
+    ]
     
     const demoAppointments = [
       {
@@ -498,6 +515,55 @@ function App() {
   const getParentName = (parentId: string) => {
     const parent = parents.find(p => p.id === parentId)
     return parent?.name || 'Unknown'
+  }
+
+  // Auto-save quick notes
+  const handleQuickNoteChange = (parentId: string, note: string) => {
+    setQuickNotes(prev => ({ ...prev, [parentId]: note }))
+    
+    // Auto-save after 2 seconds of no typing
+    const timeoutId = setTimeout(() => {
+      if (note.trim()) {
+        saveQuickNote(parentId, note)
+      }
+    }, 2000)
+
+    // Clear previous timeout
+    const prevTimeout = (window as any)[`noteTimeout_${parentId}`]
+    if (prevTimeout) clearTimeout(prevTimeout);
+    (window as any)[`noteTimeout_${parentId}`] = timeoutId
+  }
+
+  const saveQuickNote = async (parentId: string, note: string) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      const noteData = {
+        parent_id: parentId,
+        date: new Date().toISOString().split('T')[0],
+        type: 'general' as const,
+        title: `Quick Note - ${new Date().toLocaleString()}`,
+        content: note
+      }
+
+      const response = await fetch(`${API_URL}/api/notes`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(noteData)
+      })
+
+      if (response.ok) {
+        await fetchMedicalNotes(token)
+        // Clear the quick note after saving
+        setQuickNotes(prev => ({ ...prev, [parentId]: '' }))
+      }
+    } catch (error) {
+      console.error('Failed to save quick note:', error)
+    }
   }
 
   const upcomingAppointments = appointments
@@ -729,86 +795,124 @@ function App() {
             exit={{ opacity: 0, y: -20 }}
             className="screen dashboard-screen"
           >
-            <div className="dashboard-header">
-              <div className="header-content">
-                <h1>Welcome back, {user?.name}</h1>
-                <button onClick={handleLogout} className="logout-btn">Sign Out</button>
-              </div>
-            </div>
+            <div className="apple-layout">
+              <aside className="sidebar">
+                <div className="sidebar-header">
+                  <h1>ParentOS</h1>
+                  <div className="user-info">
+                    <div className="user-avatar">
+                      {user?.name?.charAt(0) || 'U'}
+                    </div>
+                    <div className="user-details">
+                      <div className="user-name">{user?.name || 'User'}</div>
+                      <button onClick={handleLogout} className="logout-link">Sign Out</button>
+                    </div>
+                  </div>
+                </div>
 
-            <nav className="navigation">
-              <button onClick={() => setCurrentScreen('dashboard')} className="nav-btn active">
-                🏠 Dashboard
-              </button>
-              <button onClick={() => setCurrentScreen('medical')} className="nav-btn">
-                🏥 Medical
-              </button>
-              <button onClick={() => setCurrentScreen('conversations')} className="nav-btn">
-                💬 Conversations
-              </button>
-              <button onClick={() => setCurrentScreen('memories')} className="nav-btn">
-                📸 Memories
-              </button>
-            </nav>
+                <nav className="sidebar-nav">
+                  <button onClick={() => setCurrentScreen('dashboard')} className="nav-item active">
+                    <div className="nav-icon">📊</div>
+                    <span>Dashboard</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('medical')} className="nav-item">
+                    <div className="nav-icon">🏥</div>
+                    <span>Medical</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('conversations')} className="nav-item">
+                    <div className="nav-icon">💬</div>
+                    <span>Conversations</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('memories')} className="nav-item">
+                    <div className="nav-icon">📸</div>
+                    <span>Memories</span>
+                  </button>
+                </nav>
+              </aside>
 
-            <div className="dashboard-content">
+              <main className="main-content">
               <div className="life-calculator">
                 <div className="calculator-header">
-                  <h2>How You Connect</h2>
-                  <p>Tell us how often you typically reach out to each parent</p>
+                  <h2>📊 Life Calculation Settings</h2>
+                  <p>Help us calculate how many conversations you have left with your parents</p>
                 </div>
                 
                 <div className="calculator-controls">
                   <div className="control-group">
-                    <label>How often do you typically connect?</label>
-                    <select className="frequency-select" id="contactFrequency" defaultValue="26">
-                      <option value="104">Twice a week (104 times/year)</option>
-                      <option value="52">Weekly (52 times/year)</option>
-                      <option value="26">Every 2 weeks (26 times/year)</option>
-                      <option value="12">Monthly (12 times/year)</option>
-                      <option value="6">Every 2 months (6 times/year)</option>
-                      <option value="4">Quarterly (4 times/year)</option>
+                    <label>Your Birth Date</label>
+                    <input 
+                      type="date" 
+                      className="date-input"
+                      id="userBirthDate"
+                      defaultValue={user?.birth_date || '1990-01-01'}
+                      max={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  
+                  <div className="control-group">
+                    <label>How often do you typically call?</label>
+                    <select className="frequency-select" id="contactFrequency" defaultValue="52">
+                      <option value="365">Daily calls (365 times/year)</option>
+                      <option value="182">Every other day (182 times/year)</option>
+                      <option value="104">Twice a week (104 calls/year)</option>
+                      <option value="52">Weekly calls (52 times/year)</option>
+                      <option value="26">Bi-weekly calls (26 times/year)</option>
+                      <option value="12">Monthly calls (12 times/year)</option>
                     </select>
                   </div>
                   
                   <div className="control-group">
-                    <label>Estimated remaining years together</label>
-                    <div className="control-input">
-                      <input 
-                        type="number" 
-                        min="1" 
-                        max="50" 
-                        defaultValue="15"
-                        className="expectancy-input"
-                        id="yearsLeft"
-                      />
-                      <span>years (your estimate)</span>
-                    </div>
+                    <label>How often do you visit?</label>
+                    <select className="frequency-select" id="visitFrequency" defaultValue="4">
+                      <option value="52">Weekly visits (52 times/year)</option>
+                      <option value="26">Bi-weekly visits (26 times/year)</option>
+                      <option value="12">Monthly visits (12 times/year)</option>
+                      <option value="6">Every 2 months (6 visits/year)</option>
+                      <option value="4">Quarterly visits (4 times/year)</option>
+                      <option value="2">Twice a year (2 visits/year)</option>
+                    </select>
                   </div>
                   
                   <button className="recalculate-btn" onClick={() => window.location.reload()}>
-                    🔄 Update Calculations
+                    🔄 Recalculate Everything
                   </button>
                 </div>
               </div>
 
               {parents.map(parent => {
                 // Get user's custom settings
-                const yearsLeftInput = document.getElementById('yearsLeft') as HTMLInputElement
+                const userBirthDateInput = document.getElementById('userBirthDate') as HTMLInputElement
                 const contactFrequencyInput = document.getElementById('contactFrequency') as HTMLSelectElement
+                const visitFrequencyInput = document.getElementById('visitFrequency') as HTMLSelectElement
                 
-                const estimatedYearsLeft = yearsLeftInput?.value ? parseInt(yearsLeftInput.value) : 15
-                const customContactFrequency = contactFrequencyInput?.value ? parseInt(contactFrequencyInput.value) : 26
+                const userBirthDate = userBirthDateInput?.value || '1990-01-01'
+                const callFrequency = contactFrequencyInput?.value ? parseInt(contactFrequencyInput.value) : 52
+                const visitFrequency = visitFrequencyInput?.value ? parseInt(visitFrequencyInput.value) : 4
                 
-                // Calculate current age from birth date
-                const birthDate = new Date(parent.birth_date)
+                // Calculate ages from birth dates
+                const parentBirthDate = new Date(parent.birth_date)
+                const userBirthDateObj = new Date(userBirthDate)
                 const today = new Date()
-                const currentAge = Math.floor((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25))
                 
-                // Calculate time left based on user's personal estimate
-                const daysLeft = Math.max(0, estimatedYearsLeft * 365)
-                const weeksLeft = Math.max(0, estimatedYearsLeft * 52)
-                const momentsLeft = Math.max(0, estimatedYearsLeft * customContactFrequency)
+                const parentAge = Math.floor((today.getTime() - parentBirthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+                const userAge = Math.floor((today.getTime() - userBirthDateObj.getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+                
+                // More realistic calculation based on life expectancy and both ages
+                // Average life expectancy around 80-85, but account for current health
+                const estimatedParentLifespan = parentAge > 70 ? 85 : 80
+                const estimatedUserLifespan = 82 // Average
+                
+                // Years left is limited by whoever might pass first
+                const parentYearsLeft = Math.max(0, estimatedParentLifespan - parentAge)
+                const userYearsLeft = Math.max(0, estimatedUserLifespan - userAge)
+                const yearsLeftTogether = Math.min(parentYearsLeft, userYearsLeft)
+                
+                // Calculate realistic interaction counts
+                const daysLeft = Math.max(0, yearsLeftTogether * 365)
+                const weeksLeft = Math.max(0, yearsLeftTogether * 52)
+                const callsLeft = Math.max(0, yearsLeftTogether * callFrequency)
+                const visitsLeft = Math.max(0, yearsLeftTogether * visitFrequency)
+                const totalMomentsLeft = callsLeft + visitsLeft
                 
                 // Days since last contact
                 const daysSinceContact = parent.last_contact ? 
@@ -825,7 +929,7 @@ function App() {
                       <div className="parent-identity">
                         <h2 className="parent-name">{parent.name}</h2>
                         <p className="parent-relationship">Your {parent.relationship}</p>
-                        <p className="parent-age">{currentAge} years old</p>
+                        <p className="parent-age">{parentAge} years old (you're {userAge})</p>
                         <p className="parent-birthdate">Born {new Date(parent.birth_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                       </div>
                     </div>
@@ -834,36 +938,51 @@ function App() {
                       <div className="health-card primary-time">
                         <div className="health-card-header">
                           <div className="health-icon">⏳</div>
-                          <div className="health-title">Time Remaining</div>
+                          <div className="health-title">Days Together</div>
                         </div>
                         <div className="health-metric">
                           <div className="health-number">{daysLeft.toLocaleString()}</div>
                           <div className="health-unit">days</div>
                         </div>
-                        <div className="health-subtitle">Based on your estimate</div>
+                        <div className="health-subtitle">≈ {yearsLeftTogether} years left</div>
                       </div>
                       
                       <div className="health-card secondary-time">
                         <div className="health-card-header">
-                          <div className="health-icon">📅</div>
-                          <div className="health-title">Weeks Left</div>
+                          <div className="health-icon">📞</div>
+                          <div className="health-title">Phone Calls</div>
                         </div>
                         <div className="health-metric">
-                          <div className="health-number">{weeksLeft.toLocaleString()}</div>
-                          <div className="health-unit">weeks</div>
+                          <div className="health-number">{callsLeft.toLocaleString()}</div>
+                          <div className="health-unit">calls</div>
                         </div>
+                        <div className="health-subtitle">At current rate</div>
                       </div>
                       
                       <div className="health-card moments-time">
                         <div className="health-card-header">
-                          <div className="health-icon">💫</div>
-                          <div className="health-title">Moments Left</div>
+                          <div className="health-icon">🏠</div>
+                          <div className="health-title">Visits</div>
                         </div>
                         <div className="health-metric">
-                          <div className="health-number">{momentsLeft.toLocaleString()}</div>
+                          <div className="health-number">{visitsLeft.toLocaleString()}</div>
                           <div className="health-unit">visits</div>
                         </div>
-                        <div className="health-subtitle">At your current pace</div>
+                        <div className="health-subtitle">In-person moments</div>
+                      </div>
+                    </div>
+                    
+                    <div className="total-moments-card">
+                      <div className="health-card-header">
+                        <div className="health-icon">💝</div>
+                        <div className="health-title">Total Interactions Left</div>
+                      </div>
+                      <div className="health-metric large">
+                        <div className="health-number">{totalMomentsLeft.toLocaleString()}</div>
+                        <div className="health-unit">calls + visits</div>
+                      </div>
+                      <div className="health-breakdown">
+                        {callsLeft.toLocaleString()} calls + {visitsLeft.toLocaleString()} visits
                       </div>
                     </div>
                     
@@ -918,6 +1037,21 @@ function App() {
                         </button>
                       </div>
                     </div>
+                    
+                    <div className="quick-note-section">
+                      <div className="quick-note-header">
+                        <div className="note-icon">📝</div>
+                        <span>Quick Note</span>
+                        <span className="auto-save-indicator">Auto-saves</span>
+                      </div>
+                      <textarea
+                        className="quick-note-input"
+                        placeholder={`Jot down something about ${parent.name}...`}
+                        value={quickNotes[parent.id] || ''}
+                        onChange={(e) => handleQuickNoteChange(parent.id, e.target.value)}
+                        rows={3}
+                      />
+                    </div>
                   </div>
                 )
               })}
@@ -943,6 +1077,7 @@ function App() {
                   </div>
                 </div>
               )}
+              </main>
             </div>
           </motion.div>
         )}
