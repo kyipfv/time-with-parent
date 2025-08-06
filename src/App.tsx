@@ -86,36 +86,51 @@ function App() {
 
   // Check for existing session on load
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const userData = localStorage.getItem('user')
-    
-    if (token && userData) {
-      try {
-        const user = JSON.parse(userData)
-        setUser(user)
-        
-        // Check if user has parents, if not show onboarding
-        fetchParents(token).then(parents => {
-          if (parents.length === 0) {
-            setCurrentScreen('onboarding')
-          } else {
-            setCurrentScreen('dashboard')
-            setParents(parents)
-            fetchAppointments(token)
-            fetchMedicalNotes(token)
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('token')
+      const userData = localStorage.getItem('user')
+      
+      if (token && userData) {
+        try {
+          const user = JSON.parse(userData)
+          setUser(user)
+          
+          // Check if user has parents, if not show onboarding
+          try {
+            const parents = await fetchParents(token)
+            if (parents.length === 0) {
+              setCurrentScreen('onboarding')
+            } else {
+              setCurrentScreen('dashboard')
+              setParents(parents)
+              // Fetch additional data in parallel
+              await Promise.all([
+                fetchAppointments(token),
+                fetchMedicalNotes(token)
+              ])
+            }
+          } catch (fetchError) {
+            // Token might be invalid
+            console.error('Failed to fetch user data:', fetchError)
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            setUser(null)
+            setCurrentScreen('login')
           }
-        }).catch(() => {
-          // Token might be invalid
+        } catch (parseError) {
+          // Invalid user data in localStorage
+          console.error('Failed to parse user data:', parseError)
           localStorage.removeItem('token')
           localStorage.removeItem('user')
           setCurrentScreen('login')
-        })
-      } catch (error) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+        }
+      } else {
+        // No stored credentials
         setCurrentScreen('login')
       }
     }
+    
+    initializeAuth()
   }, [])
 
   const fetchParents = async (token: string) => {
