@@ -856,14 +856,14 @@ function App() {
 
               <main className="main-content">
               <div className="time-awareness-header">
-                <h1 className="primary-message">⏰ Time is Our Most Precious Gift</h1>
-                <p className="awareness-subtitle">Every call, every visit, every moment with your parents is irreplaceable. Make them count.</p>
+                <h1 className="primary-message">💝 Thousands of Beautiful Moments Ahead</h1>
+                <p className="awareness-subtitle">You have so many opportunities to create memories, share laughs, and deepen your connection with your parents.</p>
               </div>
               
               <div className="life-calculator">
                 <div className="calculator-header">
-                  <h2>📊 Life Calculation Settings</h2>
-                  <p>Help us calculate how many conversations you have left with your parents</p>
+                  <h2>✨ Connection Planner</h2>
+                  <p>Let's plan all the wonderful moments you'll share with your parents</p>
                 </div>
                 
                 <div className="calculator-controls">
@@ -971,52 +971,52 @@ function App() {
                     <div className="health-metrics-grid">
                       <div className="health-card primary-time">
                         <div className="health-card-header">
-                          <div className="health-icon">⏳</div>
-                          <div className="health-title">Days Together</div>
+                          <div className="health-icon">🌟</div>
+                          <div className="health-title">Days to Connect</div>
                         </div>
                         <div className="health-metric">
                           <div className="health-number">{daysLeft.toLocaleString()}</div>
-                          <div className="health-unit">days</div>
+                          <div className="health-unit">beautiful days</div>
                         </div>
-                        <div className="health-subtitle">≈ {yearsLeftTogether} years left</div>
+                        <div className="health-subtitle">≈ {yearsLeftTogether} years of memories to make</div>
                       </div>
                       
                       <div className="health-card secondary-time">
                         <div className="health-card-header">
-                          <div className="health-icon">📞</div>
-                          <div className="health-title">Phone Calls</div>
+                          <div className="health-icon">💬</div>
+                          <div className="health-title">Conversations Ahead</div>
                         </div>
                         <div className="health-metric">
                           <div className="health-number">{callsLeft.toLocaleString()}</div>
-                          <div className="health-unit">calls</div>
+                          <div className="health-unit">chats to enjoy</div>
                         </div>
-                        <div className="health-subtitle">At current rate</div>
+                        <div className="health-subtitle">Stories to share</div>
                       </div>
                       
                       <div className="health-card moments-time">
                         <div className="health-card-header">
-                          <div className="health-icon">🏠</div>
-                          <div className="health-title">Visits</div>
+                          <div className="health-icon">🤗</div>
+                          <div className="health-title">Hugs & Visits</div>
                         </div>
                         <div className="health-metric">
                           <div className="health-number">{visitsLeft.toLocaleString()}</div>
-                          <div className="health-unit">visits</div>
+                          <div className="health-unit">gatherings</div>
                         </div>
-                        <div className="health-subtitle">In-person moments</div>
+                        <div className="health-subtitle">Hugs to give</div>
                       </div>
                     </div>
                     
                     <div className="total-moments-card">
                       <div className="health-card-header">
-                        <div className="health-icon">💝</div>
-                        <div className="health-title">Total Interactions Left</div>
+                        <div className="health-icon">🎉</div>
+                        <div className="health-title">Moments to Create Together</div>
                       </div>
                       <div className="health-metric large">
                         <div className="health-number">{totalMomentsLeft.toLocaleString()}</div>
-                        <div className="health-unit">calls + visits</div>
+                        <div className="health-unit">opportunities to connect</div>
                       </div>
                       <div className="health-breakdown">
-                        {callsLeft.toLocaleString()} calls + {visitsLeft.toLocaleString()} visits
+                        {callsLeft.toLocaleString()} laughs on the phone + {visitsLeft.toLocaleString()} warm embraces
                       </div>
                     </div>
                     
@@ -1032,10 +1032,10 @@ function App() {
                             <div className="health-unit">days ago</div>
                           </div>
                           {daysSinceContact > 7 && (
-                            <div className="health-alert">⚠️ Time to reach out</div>
+                            <div className="health-alert">💌 They'd love to hear from you!</div>
                           )}
                           {daysSinceContact <= 3 && (
-                            <div className="health-good">✅ Recent contact</div>
+                            <div className="health-good">🌈 You're staying connected!</div>
                           )}
                         </div>
                       ) : (
@@ -1048,8 +1048,8 @@ function App() {
                     
                     <div className="conversation-prompts-section">
                       <div className="prompts-header">
-                        <h3>💬 Need something to talk about?</h3>
-                        <p>Here are meaningful conversation starters with {parent.name}</p>
+                        <h3>💡 Fun Things to Ask {parent.name}</h3>
+                        <p>Discover new stories and create deeper connections</p>
                         <button 
                           className="toggle-prompts-btn"
                           onClick={() => setShowConversationPrompts(prev => ({ ...prev, [parent.id]: !prev[parent.id] }))}
@@ -1091,8 +1091,8 @@ function App() {
                     
                     <div className="health-actions">
                       <div className="action-header">
-                        <h3>🎯 Connect Right Now</h3>
-                        <p>Don't wait - reach out to {parent.name} today</p>
+                        <h3>🌸 Make {parent.name}'s Day</h3>
+                        <p>A quick call or message can brighten both your days!</p>
                       </div>
                       
                       <div className="health-action-grid">
@@ -1143,26 +1143,26 @@ function App() {
               {parents.length === 0 && (
                 <div className="meaningful-empty-state">
                   <div className="empty-content">
-                    <h2>⏰ How much time do you have left with your parents?</h2>
-                    <p className="time-reality">If your parent is 65 and you call weekly, you might have fewer than 1,000 conversations left together.</p>
+                    <h2>🌟 Thousands of Moments Await You</h2>
+                    <p className="time-reality">Your parents are waiting to share stories, give advice, and celebrate life with you.</p>
                     <div className="empty-stats">
-                      <div className="empty-stat urgent">
-                        <div className="empty-number">~8,000</div>
-                        <div className="empty-label">Days from birth to age 22</div>
-                        <div className="empty-note">Most spent with parents</div>
+                      <div className="empty-stat joyful">
+                        <div className="empty-number">∞</div>
+                        <div className="empty-label">Stories to discover</div>
+                        <div className="empty-note">About their life & yours</div>
                       </div>
                       <div className="empty-stat precious">
-                        <div className="empty-number">?</div>
-                        <div className="empty-label">Days remaining together</div>
-                        <div className="empty-note">Let's find out</div>
+                        <div className="empty-number">💝</div>
+                        <div className="empty-label">Love to share</div>
+                        <div className="empty-note">Every conversation matters</div>
                       </div>
                     </div>
-                    <div className="wake-up-call">
-                      <h3>🚨 The Wake-Up Call</h3>
-                      <p>Most people realize too late that time with parents is limited. Don't be one of them.</p>
+                    <div className="wake-up-call positive">
+                      <h3>🎁 The Gift of Connection</h3>
+                      <p>Every call is a chance to say "I love you" and every visit creates lasting memories.</p>
                     </div>
-                    <button onClick={() => setCurrentScreen('onboarding')} className="meaningful-cta urgent">
-                      ⚡ Start Counting Down
+                    <button onClick={() => setCurrentScreen('onboarding')} className="meaningful-cta joyful">
+                      💖 Start Connecting Today
                     </button>
                   </div>
                 </div>

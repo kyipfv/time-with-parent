@@ -98,6 +98,211 @@ body {
   font-weight: 400;
 }
 
+/* Time Awareness Header - Uplifting Version */
+.time-awareness-header {
+  background: linear-gradient(135deg, #a78bfa, #c084fc, #f0abfc);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 4px 20px rgba(167, 139, 250, 0.3);
+}
+
+.primary-message {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  letter-spacing: -1px;
+}
+
+.awareness-subtitle {
+  font-size: 18px;
+  opacity: 0.95;
+  line-height: 1.4;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Joyful Empty State */
+.time-reality {
+  font-size: 18px;
+  color: #8b5cf6;
+  font-weight: 500;
+  margin-bottom: 32px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(192, 132, 252, 0.1));
+  border-radius: 12px;
+  border-left: 4px solid #a78bfa;
+}
+
+.empty-stat.joyful .empty-number {
+  background: linear-gradient(135deg, #ec4899, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.wake-up-call.positive {
+  margin: 32px 0;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(251, 207, 232, 0.2), rgba(254, 202, 202, 0.2));
+  border-radius: 12px;
+  border: 1px solid rgba(244, 114, 182, 0.3);
+}
+
+.wake-up-call.positive h3 {
+  background: linear-gradient(135deg, #ec4899, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.meaningful-cta.joyful {
+  background: linear-gradient(135deg, #a78bfa, #ec4899, #f97316);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(167, 139, 250, 0.4);
+  transition: all 0.3s ease;
+}
+
+.meaningful-cta.joyful:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(167, 139, 250, 0.5);
+  background: linear-gradient(135deg, #8b5cf6, #db2777, #ea580c);
+}
+
+/* Conversation Prompts - More Playful */
+.conversation-prompts-section {
+  margin: 32px 0;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.08), rgba(244, 114, 182, 0.08));
+  border-radius: 16px;
+  border: 1px solid rgba(167, 139, 250, 0.2);
+}
+
+.prompts-header h3 {
+  font-size: 22px;
+  color: #1c1c1e;
+  margin-bottom: 8px;
+}
+
+.prompts-header p {
+  color: #6b7280;
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.toggle-prompts-btn {
+  background: linear-gradient(135deg, #a78bfa, #c084fc);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-prompts-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(167, 139, 250, 0.3);
+}
+
+.conversation-prompts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.conversation-prompt-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e5e5e7;
+  transition: all 0.2s ease;
+}
+
+.conversation-prompt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+.prompt-category {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(244, 114, 182, 0.15));
+  color: #8b5cf6;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prompt-question {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1c1c1e;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.prompt-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.use-prompt-btn {
+  background: rgba(167, 139, 250, 0.1);
+  color: #8b5cf6;
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.use-prompt-btn:hover {
+  background: rgba(167, 139, 250, 0.2);
+}
+
+.get-more-prompts-btn {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: white;
+  border: none;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  grid-column: 1 / -1;
+  justify-self: center;
+  max-width: 300px;
+}
+
+.get-more-prompts-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
 .logout-link:hover {
   text-decoration: underline;
 }
