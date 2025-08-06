@@ -334,10 +334,12 @@ function App() {
     try {
       // Check if Supabase is configured
       if (!isSupabaseConfigured()) {
-        // Demo mode login
+        // Demo mode login - more lenient
+        console.log('Running in demo mode - Supabase not configured')
         const existingUser = localStorage.getItem('user')
         if (existingUser) {
           const userData = JSON.parse(existingUser)
+          // In demo mode, just check email matches (no password verification)
           if (userData.email === loginForm.email) {
             localStorage.setItem('isDemoMode', 'true')
             setUser(userData)
@@ -355,7 +357,8 @@ function App() {
             return
           }
         }
-        setError('Invalid email or password (Demo mode)')
+        // In demo mode, create account if it doesn't exist
+        setError('No account found. Please sign up first or use "Try Without Account"')
         return
       }
 

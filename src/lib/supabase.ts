@@ -4,9 +4,21 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
+// Log configuration status (remove in production)
+if (import.meta.env.DEV) {
+  console.log('Supabase URL:', supabaseUrl ? 'Configured' : 'Missing')
+  console.log('Supabase Anon Key:', supabaseAnonKey ? 'Configured' : 'Missing')
+}
+
 // Helper to check if Supabase is configured
 export const isSupabaseConfigured = () => {
-  return !!(supabaseUrl && supabaseAnonKey)
+  const configured = !!(supabaseUrl && supabaseAnonKey && 
+                       supabaseUrl !== 'https://your-project.supabase.co' &&
+                       supabaseAnonKey !== 'your-anon-key-here')
+  if (!configured) {
+    console.log('Supabase not configured - running in demo mode')
+  }
+  return configured
 }
 
 // Only create client if we have valid config, otherwise create a dummy client
