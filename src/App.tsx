@@ -301,38 +301,60 @@ function App() {
     setError('')
 
     try {
-      const token = localStorage.getItem('token')
-      if (!token) throw new Error('No authentication token')
-
-      const parentData = {
-        name: parentForm.name,
-        birth_date: parentForm.birth_date,
-        relationship: parentForm.relationship,
-        personality: [],
-        interests: [],
-        challenges: [],
-        relationship_goals: []
-      }
-
-      const response = await fetch(`${API_URL}/api/parents`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(parentData)
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        const updatedParents = await fetchParents(token)
+      const isDemoMode = localStorage.getItem('isDemoMode') === 'true'
+      
+      if (isDemoMode) {
+        // Handle demo mode - save to localStorage
+        const newParent: Parent = {
+          id: 'parent-' + Date.now(),
+          name: parentForm.name,
+          birth_date: parentForm.birth_date,
+          relationship: parentForm.relationship,
+          personality: [],
+          interests: [],
+          challenges: [],
+          relationship_goals: []
+        }
+        
+        const updatedParents = [...parents, newParent]
         setParents(updatedParents)
+        setParentForm({ name: '', birth_date: '', relationship: 'mom' })
         setCurrentScreen('dashboard')
-        fetchAppointments(token)
-        fetchMedicalNotes(token)
       } else {
-        setError(data.error || 'Failed to create parent profile')
+        // Handle real API mode
+        const token = localStorage.getItem('token')
+        if (!token) throw new Error('No authentication token')
+
+        const parentData = {
+          name: parentForm.name,
+          birth_date: parentForm.birth_date,
+          relationship: parentForm.relationship,
+          personality: [],
+          interests: [],
+          challenges: [],
+          relationship_goals: []
+        }
+
+        const response = await fetch(`${API_URL}/api/parents`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(parentData)
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+          const updatedParents = await fetchParents(token)
+          setParents(updatedParents)
+          setCurrentScreen('dashboard')
+          fetchAppointments(token)
+          fetchMedicalNotes(token)
+        } else {
+          setError(data.error || 'Failed to create parent profile')
+        }
       }
     } catch (error) {
       setError('Network error. Please try again.')
@@ -355,103 +377,58 @@ function App() {
   }
 
   const handleDemoMode = () => {
-    // Set up editable demo user and data
-    const demoUser = {
-      id: 'demo-user-123',
-      email: 'demo@parentos.com',
-      name: 'Alex',
-      birth_date: '1990-06-15'
+    // Use localStorage for persistent demo mode
+    const storedDemoData = localStorage.getItem('demoData')
+    
+    if (storedDemoData) {
+      // Load existing demo data
+      const data = JSON.parse(storedDemoData)
+      setUser(data.user)
+      setParents(data.parents || [])
+      setAppointments(data.appointments || [])
+      setMedicalNotes(data.medicalNotes || [])
+    } else {
+      // Initialize with minimal default data
+      const demoUser = {
+        id: 'demo-user-' + Date.now(),
+        email: 'demo@parentos.com',
+        name: 'Your Name',
+        birth_date: '1990-01-01'
+      }
+      
+      // Start with empty parents - user can add their own
+      const demoData = {
+        user: demoUser,
+        parents: [],
+        appointments: [],
+        medicalNotes: []
+      }
+      
+      localStorage.setItem('demoData', JSON.stringify(demoData))
+      localStorage.setItem('isDemoMode', 'true')
+      setUser(demoUser)
+      setParents([])
+      setAppointments([])
+      setMedicalNotes([])
     }
     
-    const demoParents = [
-      {
-        id: 'demo-parent-1',
-        name: 'Mom',
-        birth_date: '1955-03-20',
-        relationship: 'mom' as const,
-        personality: ['caring', 'wise', 'supportive'],
-        interests: ['reading', 'cooking', 'gardening'],
-        challenges: ['technology'],
-        communication_style: 'calls' as const,
-        relationship_goals: ['more quality time'],
-        last_contact: '2025-01-03T10:30:00Z'
-      },
-      {
-        id: 'demo-parent-2',
-        name: 'Dad',
-        birth_date: '1952-08-10',
-        relationship: 'dad' as const,
-        personality: ['funny', 'hardworking', 'practical'],
-        interests: ['sports', 'woodworking', 'history'],
-        challenges: ['hearing'],
-        communication_style: 'calls' as const,
-        relationship_goals: ['share more stories'],
-        last_contact: '2025-01-01T15:00:00Z'
-      }
-    ]
-    
-    const demoAppointments = [
-      {
-        id: 'demo-apt-1',
-        parent_id: 'demo-parent-1',
-        date: '2025-01-15',
-        time: '10:30',
-        doctor: 'Dr. Emily Chen',
-        specialty: 'Cardiology',
-        location: 'Heart Center, 123 Medical Dr',
-        reason: 'Annual checkup and medication review',
-        notes: 'Bring current medication list and blood pressure log',
-        completed: false,
-        follow_up_needed: true
-      },
-      {
-        id: 'demo-apt-2',
-        parent_id: 'demo-parent-1',
-        date: '2025-01-08',
-        time: '14:00',
-        doctor: 'Dr. Robert Kim',
-        specialty: 'Ophthalmology',
-        location: 'Eye Care Clinic, 456 Vision St',
-        reason: 'Routine eye exam',
-        notes: 'Mentioned some blurry vision recently',
-        completed: true,
-        follow_up_needed: false
-      }
-    ]
-    
-    const demoMedicalNotes = [
-      {
-        id: 'demo-note-1',
-        parent_id: 'demo-parent-1',
-        date: '2025-01-08',
-        type: 'appointment' as const,
-        title: 'Eye Exam Results',
-        content: 'Vision is stable. Prescription updated slightly. Dr. Kim recommends coming back in 6 months instead of annual visits due to age.'
-      },
-      {
-        id: 'demo-note-2',
-        parent_id: 'demo-parent-1',
-        date: '2025-01-05',
-        type: 'medication' as const,
-        title: 'Blood Pressure Medication',
-        content: 'Mom mentioned feeling dizzy in the mornings. Need to discuss with Dr. Chen at next appointment. She takes Lisinopril 10mg daily.'
-      },
-      {
-        id: 'demo-note-3',
-        parent_id: 'demo-parent-1',
-        date: '2025-01-03',
-        type: 'symptom' as const,
-        title: 'Knee Pain',
-        content: 'Mom complained about knee pain after long walks. Consider asking about physical therapy options.'
-      }
-    ]
-    
-    setUser(demoUser)
-    setParents(demoParents)
-    setAppointments(demoAppointments)
-    setMedicalNotes(demoMedicalNotes)
-    setCurrentScreen('dashboard')
+    localStorage.setItem('isDemoMode', 'true')
+    setCurrentScreen('onboarding') // Start with onboarding to add parents
   }
+  
+  // Auto-save demo data whenever it changes
+  useEffect(() => {
+    const isDemoMode = localStorage.getItem('isDemoMode') === 'true'
+    if (isDemoMode && user) {
+      const demoData = {
+        user,
+        parents,
+        appointments,
+        medicalNotes
+      }
+      localStorage.setItem('demoData', JSON.stringify(demoData))
+    }
+  }, [user, parents, appointments, medicalNotes])
 
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -663,7 +640,7 @@ function App() {
                   className="link-button"
                   style={{ color: '#8B5CF6', textDecoration: 'underline' }}
                 >
-                  🚀 Try Demo Mode (View Dashboard)
+                  🚀 Try Without Account (Your data saves locally)
                 </button>
               </p>
             </div>
@@ -1178,35 +1155,59 @@ function App() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="screen"
+            className="screen dashboard-screen"
           >
-            <div className="header">
-              <h1>Medical Management</h1>
-              <p>Track appointments and medical notes</p>
-            </div>
+            <div className="apple-layout">
+              <aside className="sidebar">
+                <div className="sidebar-header">
+                  <h1>ParentOS</h1>
+                  <div className="user-info">
+                    <div className="user-avatar">
+                      {user?.name?.charAt(0) || 'U'}
+                    </div>
+                    <div className="user-details">
+                      <div className="user-name">{user?.name || 'User'}</div>
+                      <button onClick={handleLogout} className="logout-link">Sign Out</button>
+                    </div>
+                  </div>
+                </div>
 
-            <nav className="navigation">
-              <button onClick={() => setCurrentScreen('dashboard')} className="nav-btn">
-                Dashboard
-              </button>
-              <button onClick={() => setCurrentScreen('medical')} className="nav-btn active">
-                Medical
-              </button>
-              <button onClick={() => setCurrentScreen('conversations')} className="nav-btn">
-                Conversations
-              </button>
-              <button onClick={() => setCurrentScreen('memories')} className="nav-btn">
-                Memories
-              </button>
-            </nav>
+                <nav className="sidebar-nav">
+                  <button onClick={() => setCurrentScreen('dashboard')} className="nav-item">
+                    <div className="nav-icon">📊</div>
+                    <span>Dashboard</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('medical')} className="nav-item active">
+                    <div className="nav-icon">🏥</div>
+                    <span>Medical</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('conversations')} className="nav-item">
+                    <div className="nav-icon">💬</div>
+                    <span>Conversations</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('memories')} className="nav-item">
+                    <div className="nav-icon">📸</div>
+                    <span>Memories</span>
+                  </button>
+                </nav>
+              </aside>
+
+              <main className="main-content">
 
             <div className="medical-content">
+              <div className="page-header">
+                <h1>🏥 Medical Management</h1>
+                <p>Track health information and appointments for your parents</p>
+              </div>
+              
               <div className="medical-actions">
-                <button onClick={() => setShowAppointmentForm(true)} className="btn-primary">
-                  Add Appointment
+                <button onClick={() => setShowAppointmentForm(true)} className="action-button primary">
+                  <span className="button-icon">📅</span>
+                  <span>Add Appointment</span>
                 </button>
-                <button onClick={() => setShowNoteForm(true)} className="btn-secondary">
-                  Add Note
+                <button onClick={() => setShowNoteForm(true)} className="action-button secondary">
+                  <span className="button-icon">📝</span>
+                  <span>Add Note</span>
                 </button>
               </div>
 
@@ -1399,63 +1400,89 @@ function App() {
               )}
 
               <div className="medical-sections">
-                <div className="medical-section">
-                  <h2>Appointments</h2>
+                <div className="section-card">
+                  <div className="section-header">
+                    <h2>📅 Upcoming Appointments</h2>
+                    <span className="section-count">{appointments.filter(a => !a.completed).length}</span>
+                  </div>
                   {appointments.length > 0 ? (
-                    <div className="appointments-grid">
+                    <div className="items-list">
                       {appointments.map(appointment => (
-                        <div key={appointment.id} className="appointment-card">
-                          <div className="appointment-header">
-                            <h3>{getParentName(appointment.parent_id)}</h3>
-                            <div className="appointment-status">
-                              {appointment.completed ? '✓ Completed' : 'Upcoming'}
-                            </div>
+                        <div key={appointment.id} className="item-card">
+                          <div className="item-icon-container">
+                            <div className="item-icon">{appointment.completed ? '✅' : '🏥'}</div>
                           </div>
-                          <div className="appointment-details">
-                            <div><strong>Date:</strong> {new Date(appointment.date).toLocaleDateString()}</div>
-                            <div><strong>Time:</strong> {appointment.time}</div>
-                            <div><strong>Doctor:</strong> {appointment.doctor}</div>
-                            <div><strong>Specialty:</strong> {appointment.specialty}</div>
-                            <div><strong>Location:</strong> {appointment.location}</div>
-                            <div><strong>Reason:</strong> {appointment.reason}</div>
+                          <div className="item-content">
+                            <div className="item-title">{appointment.doctor}</div>
+                            <div className="item-subtitle">{appointment.specialty} • {getParentName(appointment.parent_id)}</div>
+                            <div className="item-details">
+                              <span className="detail-badge">📅 {new Date(appointment.date).toLocaleDateString()}</span>
+                              <span className="detail-badge">⏰ {appointment.time}</span>
+                              <span className="detail-badge">📍 {appointment.location}</span>
+                            </div>
                             {appointment.notes && (
-                              <div><strong>Notes:</strong> {appointment.notes}</div>
+                              <div className="item-note">{appointment.notes}</div>
                             )}
+                          </div>
+                          <div className="item-status">
+                            <span className={`status-badge ${appointment.completed ? 'completed' : 'upcoming'}`}>
+                              {appointment.completed ? 'Completed' : 'Upcoming'}
+                            </span>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p>No appointments yet. Create your first appointment!</p>
+                    <div className="empty-state">
+                      <div className="empty-icon">📅</div>
+                      <p>No appointments yet</p>
+                      <button onClick={() => setShowAppointmentForm(true)} className="empty-action">
+                        Add First Appointment
+                      </button>
+                    </div>
                   )}
                 </div>
 
-                <div className="medical-section">
-                  <h2>Medical Notes</h2>
+                <div className="section-card">
+                  <div className="section-header">
+                    <h2>📝 Medical Notes</h2>
+                    <span className="section-count">{medicalNotes.length}</span>
+                  </div>
                   {medicalNotes.length > 0 ? (
-                    <div className="notes-grid">
+                    <div className="items-list">
                       {medicalNotes.map(note => (
-                        <div key={note.id} className="note-card">
-                          <div className="note-header">
-                            <h3>{note.title}</h3>
-                            <div className="note-type">{note.type}</div>
+                        <div key={note.id} className="item-card">
+                          <div className="item-icon-container">
+                            <div className="item-icon">
+                              {note.type === 'medication' ? '💊' : 
+                               note.type === 'symptom' ? '🌡️' :
+                               note.type === 'appointment' ? '🏥' : '📝'}
+                            </div>
                           </div>
-                          <div className="note-details">
-                            <div><strong>Parent:</strong> {getParentName(note.parent_id)}</div>
-                            <div><strong>Date:</strong> {new Date(note.date).toLocaleDateString()}</div>
-                            <div className="note-content">{note.content}</div>
+                          <div className="item-content">
+                            <div className="item-title">{note.title}</div>
+                            <div className="item-subtitle">{getParentName(note.parent_id)} • {new Date(note.date).toLocaleDateString()}</div>
+                            <div className="item-description">{note.content}</div>
+                            <span className="type-badge">{note.type}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p>No medical notes yet. Create your first note!</p>
+                    <div className="empty-state">
+                      <div className="empty-icon">📝</div>
+                      <p>No medical notes yet</p>
+                      <button onClick={() => setShowNoteForm(true)} className="empty-action">
+                        Add First Note
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
             </div>
+              </main>
+            </div>
 
-            {error && <div className="error">{error}</div>}
           </motion.div>
         )}
 
@@ -1465,39 +1492,84 @@ function App() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="screen"
+            className="screen dashboard-screen"
           >
-            <div className="header">
-              <h1>{currentScreen === 'conversations' ? 'Conversation Starters' : 'Memory Book'}</h1>
-              <p>{currentScreen === 'conversations' 
-                ? 'Meaningful questions to ask your parents' 
-                : 'Preserve precious moments and stories'
-              }</p>
-            </div>
+            <div className="apple-layout">
+              <aside className="sidebar">
+                <div className="sidebar-header">
+                  <h1>ParentOS</h1>
+                  <div className="user-info">
+                    <div className="user-avatar">
+                      {user?.name?.charAt(0) || 'U'}
+                    </div>
+                    <div className="user-details">
+                      <div className="user-name">{user?.name || 'User'}</div>
+                      <button onClick={handleLogout} className="logout-link">Sign Out</button>
+                    </div>
+                  </div>
+                </div>
 
-            <nav className="navigation">
-              <button onClick={() => setCurrentScreen('dashboard')} className="nav-btn">
-                Dashboard
-              </button>
-              <button onClick={() => setCurrentScreen('medical')} className="nav-btn">
-                Medical
-              </button>
-              <button onClick={() => setCurrentScreen('conversations')} 
-                      className={`nav-btn ${currentScreen === 'conversations' ? 'active' : ''}`}>
-                Conversations
-              </button>
-              <button onClick={() => setCurrentScreen('memories')} 
-                      className={`nav-btn ${currentScreen === 'memories' ? 'active' : ''}`}>
-                Memories
-              </button>
-            </nav>
+                <nav className="sidebar-nav">
+                  <button onClick={() => setCurrentScreen('dashboard')} className="nav-item">
+                    <div className="nav-icon">📊</div>
+                    <span>Dashboard</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('medical')} className="nav-item">
+                    <div className="nav-icon">🏥</div>
+                    <span>Medical</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('conversations')} 
+                          className={`nav-item ${currentScreen === 'conversations' ? 'active' : ''}`}>
+                    <div className="nav-icon">💬</div>
+                    <span>Conversations</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('memories')} 
+                          className={`nav-item ${currentScreen === 'memories' ? 'active' : ''}`}>
+                    <div className="nav-icon">📸</div>
+                    <span>Memories</span>
+                  </button>
+                </nav>
+              </aside>
 
-            <div className="placeholder-content">
-              <h2>Coming Soon!</h2>
-              <p>This feature is under development and will be available in a future update.</p>
-              <button onClick={() => setCurrentScreen('dashboard')} className="btn-primary">
-                Back to Dashboard
-              </button>
+              <main className="main-content">
+                <div className="page-content">
+                  <div className="page-header">
+                    <h1>{currentScreen === 'conversations' ? '💬 Conversation Starters' : '📸 Memory Book'}</h1>
+                    <p>{currentScreen === 'conversations' 
+                      ? 'Meaningful questions and topics to discuss with your parents' 
+                      : 'Capture and preserve precious moments with your family'
+                    }</p>
+                  </div>
+
+                  <div className="coming-soon-card">
+                    <div className="coming-soon-icon">
+                      {currentScreen === 'conversations' ? '🚀' : '🎨'}
+                    </div>
+                    <h2>Coming Soon!</h2>
+                    <p>We're working hard to bring you this feature. It will help you {currentScreen === 'conversations' 
+                      ? 'discover meaningful conversation topics and questions tailored to your parents\' interests' 
+                      : 'create a beautiful digital scrapbook of photos, stories, and memories with your parents'}.</p>
+                    <div className="feature-preview">
+                      <h3>What to expect:</h3>
+                      {currentScreen === 'conversations' ? (
+                        <ul>
+                          <li>Personalized conversation topics based on your parents' interests</li>
+                          <li>Deep questions to learn about their life stories</li>
+                          <li>Fun activities and games to do together</li>
+                          <li>Conversation history and notes</li>
+                        </ul>
+                      ) : (
+                        <ul>
+                          <li>Photo albums with captions and stories</li>
+                          <li>Voice recording integration</li>
+                          <li>Timeline of important family events</li>
+                          <li>Shareable memory books</li>
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </main>
             </div>
           </motion.div>
         )}
