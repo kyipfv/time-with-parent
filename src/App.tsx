@@ -29,6 +29,15 @@ interface ConversationPrompt {
   description: string
 }
 
+interface PetData {
+  name: string
+  happiness: number // 0-100
+  lastFed: string // ISO date
+  lastCall: string // ISO date
+  streak: number
+  totalPoints: number
+}
+
 interface MedicalAppointment {
   id: string
   parent_id: string
@@ -103,6 +112,90 @@ function App() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [recentlyDeleted, setRecentlyDeleted] = useState<Parent[]>([])
   const [showDeleted, setShowDeleted] = useState(false)
+  
+  // Pet system state
+  const [petData, setPetData] = useState<PetData>(() => {
+    const saved = localStorage.getItem('petData')
+    if (saved) return JSON.parse(saved)
+    return {
+      name: 'Buddy',
+      happiness: 50,
+      lastFed: new Date().toISOString(),
+      lastCall: '',
+      streak: 0,
+      totalPoints: 0
+    }
+  })
+  
+  // Calculate pet mood based on interactions
+  const calculatePetMood = () => {
+    const now = new Date()
+    const lastFed = new Date(petData.lastFed)
+    const hoursSinceFeeding = (now.getTime() - lastFed.getTime()) / (1000 * 60 * 60)
+    
+    if (hoursSinceFeeding < 24) return 'happy'
+    if (hoursSinceFeeding < 48) return 'neutral'
+    return 'sad'
+  }
+  
+  const [petMood, setPetMood] = useState(calculatePetMood())
+  
+  // Save pet data whenever it changes
+  useEffect(() => {
+    localStorage.setItem('petData', JSON.stringify(petData))
+    setPetMood(calculatePetMood())
+  }, [petData])
+  
+  // Pet interaction functions
+  const feedPet = () => {
+    const now = new Date()
+    const lastFed = new Date(petData.lastFed)
+    const daysSinceLastFeed = (now.getTime() - lastFed.getTime()) / (1000 * 60 * 60 * 24)
+    
+    // Calculate streak
+    let newStreak = petData.streak
+    if (daysSinceLastFeed <= 1) {
+      newStreak = petData.streak + 1
+    } else if (daysSinceLastFeed > 2) {
+      newStreak = 0
+    }
+    
+    setPetData({
+      ...petData,
+      happiness: Math.min(100, petData.happiness + 20),
+      lastFed: now.toISOString(),
+      streak: newStreak,
+      totalPoints: petData.totalPoints + 10
+    })
+  }
+  
+  const recordParentCall = () => {
+    setPetData({
+      ...petData,
+      happiness: Math.min(100, petData.happiness + 30),
+      lastCall: new Date().toISOString(),
+      totalPoints: petData.totalPoints + 50
+    })
+  }
+  
+  // Get pet message based on mood and actions
+  const getPetMessage = () => {
+    const now = new Date()
+    const lastFed = new Date(petData.lastFed)
+    const hoursSinceFeeding = (now.getTime() - lastFed.getTime()) / (1000 * 60 * 60)
+    
+    if (hoursSinceFeeding > 48) {
+      return "Woof... I'm feeling lonely. Have you called your parents lately?"
+    } else if (hoursSinceFeeding > 24) {
+      return "Woof! Time for your daily check-in! How are your parents doing?"
+    } else if (petData.streak > 7) {
+      return `Amazing! ${petData.streak} day streak! Your parents must be so happy! 🎉`
+    } else if (petData.streak > 3) {
+      return `Woof woof! ${petData.streak} days in a row! Keep it up!`
+    } else {
+      return "Hi there! I'm Buddy, your parent connection companion! 🐕"
+    }
+  }
   
   // Conversation prompts to help users connect with parents
   const conversationPrompts: ConversationPrompt[] = [
@@ -903,9 +996,63 @@ function App() {
               </aside>
 
               <main className="main-content">
-              <div className="time-awareness-header">
-                <h1 className="primary-message">💝 Thousands of Beautiful Moments Ahead</h1>
-                <p className="awareness-subtitle">You have so many opportunities to create memories, share laughs, and deepen your connection with your parents.</p>
+              <div className="pet-container">
+                <div className="pet-section">
+                  <div className={`pet-dog ${petMood}`}>
+                    <div className="dog-body">
+                      <div className="dog-head">
+                        <div className="dog-ear left"></div>
+                        <div className="dog-ear right"></div>
+                        <div className="dog-face">
+                          <div className="dog-eye left"></div>
+                          <div className="dog-eye right"></div>
+                          <div className="dog-nose"></div>
+                          <div className="dog-mouth"></div>
+                        </div>
+                      </div>
+                      <div className="dog-tail"></div>
+                    </div>
+                  </div>
+                  
+                  <div className="pet-info">
+                    <div className="pet-name">{petData.name}</div>
+                    <div className="pet-stats">
+                      <div className="happiness-bar">
+                        <div className="happiness-label">Happiness</div>
+                        <div className="happiness-track">
+                          <div 
+                            className="happiness-fill" 
+                            style={{ width: `${petData.happiness}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      {petData.streak > 0 && (
+                        <div className="streak-badge">
+                          🔥 {petData.streak} day streak!
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="pet-message">
+                      {getPetMessage()}
+                    </div>
+                    
+                    <div className="pet-actions">
+                      <button 
+                        className="pet-action-btn feed"
+                        onClick={feedPet}
+                      >
+                        🦴 Daily Check-in
+                      </button>
+                      <button 
+                        className="pet-action-btn call"
+                        onClick={recordParentCall}
+                      >
+                        📞 I Called My Parents!
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
               
               <div className="life-calculator">

@@ -906,6 +906,260 @@ body {
   font-weight: 600;
 }
 
+/* Parent Pet System */
+.pet-container {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(251, 191, 36, 0.2);
+}
+
+.pet-section {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+/* Cute CSS Dog */
+.pet-dog {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.dog-body {
+  position: relative;
+  width: 80px;
+  height: 60px;
+  background: #8b4513;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  margin: 30px auto 0;
+}
+
+.dog-head {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: #8b4513;
+  border-radius: 50%;
+  top: -25px;
+  left: 10px;
+}
+
+.dog-ear {
+  position: absolute;
+  width: 25px;
+  height: 40px;
+  background: #654321;
+  border-radius: 100% 0;
+}
+
+.dog-ear.left {
+  transform: rotate(-40deg);
+  left: -5px;
+  top: -5px;
+}
+
+.dog-ear.right {
+  transform: rotate(40deg) scaleX(-1);
+  right: -5px;
+  top: -5px;
+}
+
+.dog-face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.dog-eye {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #000;
+  border-radius: 50%;
+  top: 20px;
+}
+
+.dog-eye.left {
+  left: 15px;
+}
+
+.dog-eye.right {
+  right: 15px;
+}
+
+.dog-nose {
+  position: absolute;
+  width: 8px;
+  height: 6px;
+  background: #000;
+  border-radius: 50%;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dog-mouth {
+  position: absolute;
+  width: 20px;
+  height: 10px;
+  border: 2px solid #000;
+  border-top: none;
+  border-radius: 0 0 20px 20px;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dog-tail {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background: #8b4513;
+  border-radius: 50%;
+  right: -20px;
+  top: 10px;
+  transform-origin: center;
+  animation: wag 0.5s ease-in-out infinite alternate;
+}
+
+/* Dog Animations */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes wag {
+  0% { transform: rotate(-20deg); }
+  100% { transform: rotate(20deg); }
+}
+
+/* Mood States */
+.pet-dog.sad .dog-mouth {
+  border-radius: 20px 20px 0 0;
+  border: 2px solid #000;
+  border-bottom: none;
+}
+
+.pet-dog.sad {
+  animation: none;
+}
+
+.pet-dog.sad .dog-tail {
+  animation: none;
+  transform: rotate(45deg);
+}
+
+.pet-dog.happy .dog-tail {
+  animation: wag 0.3s ease-in-out infinite alternate;
+}
+
+/* Pet Info Section */
+.pet-info {
+  flex: 1;
+}
+
+.pet-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 12px;
+}
+
+.pet-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.happiness-bar {
+  flex: 1;
+  max-width: 200px;
+}
+
+.happiness-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 4px;
+}
+
+.happiness-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.happiness-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444, #f97316, #fbbf24);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.streak-badge {
+  background: white;
+  color: #f97316;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.2);
+}
+
+.pet-message {
+  background: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #78350f;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pet-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.pet-action-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pet-action-btn.feed {
+  background: white;
+  color: #92400e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pet-action-btn.feed:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.pet-action-btn.call {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.pet-action-btn.call:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
 /* Improved Typography and Edit Features */
 .parent-name {
   font-size: 28px;
