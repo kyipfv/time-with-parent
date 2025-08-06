@@ -74,7 +74,7 @@ function App() {
   
   // Auth forms
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
-  const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '' })
+  const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '', birthDate: '' })
   const [parentForm, setParentForm] = useState({ name: '', birth_date: '', relationship: 'mom' as 'mom' | 'dad' | 'stepmom' | 'stepdad' | 'guardian' | 'grandmother' | 'grandfather' })
   
   // Form states
@@ -775,6 +775,18 @@ function App() {
                 <p>Join ParentOS and strengthen your family relationships</p>
               </div>
 
+              <div style={{ 
+                background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(244, 114, 182, 0.1))',
+                padding: '16px',
+                borderRadius: '12px',
+                marginBottom: '24px',
+                border: '1px solid rgba(167, 139, 250, 0.2)'
+              }}>
+                <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5', margin: 0 }}>
+                  💜 We'll use your birthdate and your parent's birthdate to calculate how much precious time you have together, helping you make the most of every moment.
+                </p>
+              </div>
+
               <form onSubmit={handleRegister} className="form">
                 <div className="form-group">
                   <label>Name</label>
@@ -784,6 +796,18 @@ function App() {
                     onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
                     required
                     disabled={loading}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Your Birth Date</label>
+                  <input
+                    type="date"
+                    value={registerForm.birthDate}
+                    onChange={(e) => setRegisterForm({ ...registerForm, birthDate: e.target.value })}
+                    required
+                    disabled={loading}
+                    max={new Date().toISOString().split('T')[0]}
                   />
                 </div>
 
