@@ -100,6 +100,8 @@ function App() {
 
   const [showAppointmentForm, setShowAppointmentForm] = useState(false)
   const [showNoteForm, setShowNoteForm] = useState(false)
+  const [appointmentNaturalInput, setAppointmentNaturalInput] = useState('')
+  const [noteNaturalInput, setNoteNaturalInput] = useState('')
   const [quickNotes, setQuickNotes] = useState<{[parentId: string]: string}>({})
   const [showConversationPrompts, setShowConversationPrompts] = useState<{[parentId: string]: boolean}>({})
   const [editingParent, setEditingParent] = useState<string | null>(null)
@@ -551,6 +553,133 @@ function App() {
       localStorage.setItem('demoData', JSON.stringify(demoData))
     }
   }, [user, parents, appointments, medicalNotes])
+
+  // Parse natural language for appointments
+  const parseAppointmentNaturalLanguage = (input: string, parentId: string): typeof appointmentForm | null => {
+    try {
+      // Example: "appointment with dr roberto 3pm on friday 8th august"
+      // Or: "dr smith cardiology at mercy hospital tomorrow 2:30pm for checkup"
+      
+      const lowerInput = input.toLowerCase()
+      
+      // Extract doctor name (after "dr" or "doctor" or "with")
+      const doctorMatch = lowerInput.match(/(?:dr\.?|doctor)\s+(\w+(?:\s+\w+)?)/i)
+      const doctor = doctorMatch ? doctorMatch[1].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : ''
+      
+      // Extract time
+      const timeMatch = lowerInput.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)|(\d{1,2})\s*(am|pm)/i)
+      let time = ''
+      if (timeMatch) {
+        const [, hour1, minutes, ampm1, hour2, ampm2] = timeMatch
+        const hour = hour1 || hour2
+        const isPM = (ampm1 || ampm2).toLowerCase() === 'pm'
+        const hourNum = parseInt(hour)
+        const adjustedHour = isPM && hourNum !== 12 ? hourNum + 12 : (!isPM && hourNum === 12 ? 0 : hourNum)
+        time = `${adjustedHour.toString().padStart(2, '0')}:${minutes || '00'}`
+      }
+      
+      // Extract date
+      let date = ''
+      const today = new Date()
+      
+      if (lowerInput.includes('today')) {
+        date = today.toISOString().split('T')[0]
+      } else if (lowerInput.includes('tomorrow')) {
+        const tomorrow = new Date(today)
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        date = tomorrow.toISOString().split('T')[0]
+      } else {
+        // Try to find month and day
+        const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
+        const monthMatch = months.findIndex(m => lowerInput.includes(m))
+        if (monthMatch !== -1) {
+          const dayMatch = lowerInput.match(/(\d{1,2})(?:st|nd|rd|th)?/)
+          if (dayMatch) {
+            const year = today.getFullYear()
+            const month = monthMatch
+            const day = parseInt(dayMatch[1])
+            date = new Date(year, month, day).toISOString().split('T')[0]
+          }
+        }
+        
+        // Try day of week
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+        const dayIndex = days.findIndex(d => lowerInput.includes(d))
+        if (dayIndex !== -1 && !date) {
+          const currentDay = today.getDay()
+          let daysToAdd = dayIndex - currentDay
+          if (daysToAdd <= 0) daysToAdd += 7
+          const targetDate = new Date(today)
+          targetDate.setDate(today.getDate() + daysToAdd)
+          date = targetDate.toISOString().split('T')[0]
+        }
+      }
+      
+      // Extract specialty (common medical specialties)
+      const specialties = ['cardiology', 'dermatology', 'neurology', 'orthopedics', 'pediatrics', 'psychiatry', 'general', 'dental', 'optometry', 'physical therapy']
+      const specialty = specialties.find(s => lowerInput.includes(s)) || ''
+      
+      // Extract location (after "at" or "in")
+      const locationMatch = lowerInput.match(/(?:at|in)\s+([^,\s]+(?:\s+[^,\s]+)?(?:\s+[^,\s]+)?)/i)
+      const location = locationMatch ? locationMatch[1].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : ''
+      
+      // Extract reason (after "for")
+      const reasonMatch = lowerInput.match(/(?:for)\s+(.+?)(?:\s+at|\s+on|\s+tomorrow|\s+today|$)/i)
+      const reason = reasonMatch ? reasonMatch[1].trim() : 'Regular checkup'
+      
+      return {
+        parent_id: parentId,
+        date: date || today.toISOString().split('T')[0],
+        time: time || '14:00',
+        doctor: doctor || 'Doctor',
+        specialty: specialty || 'General',
+        location: location || 'Medical Center',
+        reason: reason,
+        notes: `Created from: "${input}"`
+      }
+    } catch (error) {
+      console.error('Error parsing appointment:', error)
+      return null
+    }
+  }
+
+  // Parse natural language for medical notes
+  const parseNoteNaturalLanguage = (input: string, parentId: string): typeof noteForm | null => {
+    try {
+      // Examples: 
+      // "mom started new blood pressure medication lisinopril 10mg"
+      // "dad complained of headache and dizziness today"
+      // "noticed swelling in ankles, scheduled followup"
+      
+      const lowerInput = input.toLowerCase()
+      const today = new Date().toISOString().split('T')[0]
+      
+      // Determine note type
+      let type: 'appointment' | 'medication' | 'symptom' | 'general' = 'general'
+      if (lowerInput.match(/medication|medicine|prescription|drug|pill|dose|mg/)) {
+        type = 'medication'
+      } else if (lowerInput.match(/pain|ache|symptom|fever|dizzy|nausea|swelling|hurt/)) {
+        type = 'symptom'
+      } else if (lowerInput.match(/appointment|scheduled|followup|visit|checkup/)) {
+        type = 'appointment'
+      }
+      
+      // Extract a title (first few words or key phrase)
+      const words = input.split(' ')
+      const title = words.slice(0, Math.min(5, words.length)).join(' ')
+      
+      return {
+        parent_id: parentId,
+        date: today,
+        type: type,
+        title: title,
+        content: input
+      }
+    } catch (error) {
+      console.error('Error parsing note:', error)
+      return null
+    }
+  }
 
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1589,14 +1718,47 @@ function App() {
               {showAppointmentForm && (
                 <div className="modal-overlay">
                   <div className="modal">
-                    <h2>New Appointment</h2>
-                    <form onSubmit={handleCreateAppointment} className="form">
+                    <h2>✨ Add Appointment</h2>
+                    <form onSubmit={(e) => {
+                      e.preventDefault()
+                      const parentSelect = document.getElementById('appointment-parent') as HTMLSelectElement
+                      const parentId = parentSelect?.value
+                      if (!parentId || !appointmentNaturalInput.trim()) {
+                        alert('Please select a parent and describe the appointment')
+                        return
+                      }
+                      
+                      const parsed = parseAppointmentNaturalLanguage(appointmentNaturalInput, parentId)
+                      if (parsed) {
+                        setAppointmentForm(parsed)
+                        handleCreateAppointment(e)
+                      } else {
+                        alert('Could not understand the appointment details. Please try again.')
+                      }
+                    }} className="form">
+                      <div style={{
+                        background: 'linear-gradient(135deg, rgba(0, 122, 255, 0.05), rgba(52, 199, 89, 0.05))',
+                        padding: '16px',
+                        borderRadius: '12px',
+                        marginBottom: '20px',
+                        border: '1px solid rgba(0, 122, 255, 0.1)'
+                      }}>
+                        <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.5', margin: '0 0 8px 0' }}>
+                          <strong>Just describe the appointment naturally!</strong> For example:
+                        </p>
+                        <ul style={{ fontSize: '13px', color: '#6b7280', margin: 0, paddingLeft: '20px' }}>
+                          <li>"Dr. Roberto cardiology tomorrow at 3pm"</li>
+                          <li>"Dental cleaning with Dr. Smith next Friday 10am"</li>
+                          <li>"Physical therapy at Mercy Hospital Monday 2:30pm"</li>
+                        </ul>
+                      </div>
+
                       <div className="form-group">
-                        <label>Parent</label>
+                        <label>For which parent?</label>
                         <select
-                          value={appointmentForm.parent_id}
-                          onChange={(e) => setAppointmentForm({ ...appointmentForm, parent_id: e.target.value })}
+                          id="appointment-parent"
                           required
+                          style={{ marginBottom: '16px' }}
                         >
                           <option value="">Select parent</option>
                           {parents.map(parent => (
@@ -1608,80 +1770,30 @@ function App() {
                       </div>
                       
                       <div className="form-group">
-                        <label>Date</label>
-                        <input
-                          type="date"
-                          value={appointmentForm.date}
-                          onChange={(e) => setAppointmentForm({ ...appointmentForm, date: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Time</label>
-                        <input
-                          type="time"
-                          value={appointmentForm.time}
-                          onChange={(e) => setAppointmentForm({ ...appointmentForm, time: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Doctor</label>
-                        <input
-                          type="text"
-                          value={appointmentForm.doctor}
-                          onChange={(e) => setAppointmentForm({ ...appointmentForm, doctor: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Specialty</label>
-                        <input
-                          type="text"
-                          value={appointmentForm.specialty}
-                          onChange={(e) => setAppointmentForm({ ...appointmentForm, specialty: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Location</label>
-                        <input
-                          type="text"
-                          value={appointmentForm.location}
-                          onChange={(e) => setAppointmentForm({ ...appointmentForm, location: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Reason</label>
-                        <input
-                          type="text"
-                          value={appointmentForm.reason}
-                          onChange={(e) => setAppointmentForm({ ...appointmentForm, reason: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Notes (optional)</label>
+                        <label>Describe the appointment</label>
                         <textarea
-                          value={appointmentForm.notes}
-                          onChange={(e) => setAppointmentForm({ ...appointmentForm, notes: e.target.value })}
+                          value={appointmentNaturalInput}
+                          onChange={(e) => setAppointmentNaturalInput(e.target.value)}
+                          placeholder="e.g., Appointment with Dr. Roberto 3pm on Friday August 8th for annual checkup"
+                          required
+                          rows={3}
+                          style={{
+                            fontSize: '16px',
+                            lineHeight: '1.5'
+                          }}
                         />
                       </div>
 
                       <div className="form-actions">
                         <button type="submit" disabled={loading} className="btn-primary">
-                          {loading ? 'Creating...' : 'Create Appointment'}
+                          {loading ? 'Creating...' : '✅ Add Appointment'}
                         </button>
                         <button
                           type="button"
-                          onClick={() => setShowAppointmentForm(false)}
+                          onClick={() => {
+                            setShowAppointmentForm(false)
+                            setAppointmentNaturalInput('')
+                          }}
                           className="btn-secondary"
                         >
                           Cancel
@@ -1695,14 +1807,47 @@ function App() {
               {showNoteForm && (
                 <div className="modal-overlay">
                   <div className="modal">
-                    <h2>New Medical Note</h2>
-                    <form onSubmit={handleCreateNote} className="form">
+                    <h2>📝 Add Medical Note</h2>
+                    <form onSubmit={(e) => {
+                      e.preventDefault()
+                      const parentSelect = document.getElementById('note-parent') as HTMLSelectElement
+                      const parentId = parentSelect?.value
+                      if (!parentId || !noteNaturalInput.trim()) {
+                        alert('Please select a parent and write a note')
+                        return
+                      }
+                      
+                      const parsed = parseNoteNaturalLanguage(noteNaturalInput, parentId)
+                      if (parsed) {
+                        setNoteForm(parsed)
+                        handleCreateNote(e)
+                      } else {
+                        alert('Could not process the note. Please try again.')
+                      }
+                    }} className="form">
+                      <div style={{
+                        background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.05), rgba(236, 72, 153, 0.05))',
+                        padding: '16px',
+                        borderRadius: '12px',
+                        marginBottom: '20px',
+                        border: '1px solid rgba(168, 85, 247, 0.1)'
+                      }}>
+                        <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.5', margin: '0 0 8px 0' }}>
+                          <strong>Just write your note naturally!</strong> I'll categorize it for you:
+                        </p>
+                        <ul style={{ fontSize: '13px', color: '#6b7280', margin: 0, paddingLeft: '20px' }}>
+                          <li>"Started new blood pressure medication lisinopril 10mg"</li>
+                          <li>"Complained of headache and dizziness today"</li>
+                          <li>"Scheduled followup with cardiologist for next month"</li>
+                        </ul>
+                      </div>
+
                       <div className="form-group">
-                        <label>Parent</label>
+                        <label>For which parent?</label>
                         <select
-                          value={noteForm.parent_id}
-                          onChange={(e) => setNoteForm({ ...noteForm, parent_id: e.target.value })}
+                          id="note-parent"
                           required
+                          style={{ marginBottom: '16px' }}
                         >
                           <option value="">Select parent</option>
                           {parents.map(parent => (
@@ -1712,58 +1857,32 @@ function App() {
                           ))}
                         </select>
                       </div>
-
+                      
                       <div className="form-group">
-                        <label>Date</label>
-                        <input
-                          type="date"
-                          value={noteForm.date}
-                          onChange={(e) => setNoteForm({ ...noteForm, date: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Type</label>
-                        <select
-                          value={noteForm.type}
-                          onChange={(e) => setNoteForm({ ...noteForm, type: e.target.value as any })}
-                          required
-                        >
-                          <option value="general">General</option>
-                          <option value="appointment">Appointment</option>
-                          <option value="medication">Medication</option>
-                          <option value="symptom">Symptom</option>
-                        </select>
-                      </div>
-
-                      <div className="form-group">
-                        <label>Title</label>
-                        <input
-                          type="text"
-                          value={noteForm.title}
-                          onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Content</label>
+                        <label>What would you like to note?</label>
                         <textarea
-                          value={noteForm.content}
-                          onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
+                          value={noteNaturalInput}
+                          onChange={(e) => setNoteNaturalInput(e.target.value)}
+                          placeholder="e.g., Mom's blood pressure was 130/80 today, doctor adjusted medication dosage"
                           required
                           rows={4}
+                          style={{
+                            fontSize: '16px',
+                            lineHeight: '1.5'
+                          }}
                         />
                       </div>
 
                       <div className="form-actions">
                         <button type="submit" disabled={loading} className="btn-primary">
-                          {loading ? 'Creating...' : 'Create Note'}
+                          {loading ? 'Saving...' : '💾 Save Note'}
                         </button>
                         <button
                           type="button"
-                          onClick={() => setShowNoteForm(false)}
+                          onClick={() => {
+                            setShowNoteForm(false)
+                            setNoteNaturalInput('')
+                          }}
                           className="btn-secondary"
                         >
                           Cancel
