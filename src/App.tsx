@@ -808,22 +808,34 @@ function App() {
     setError('')
 
     try {
-      const token = localStorage.getItem('token')
-      if (!token) throw new Error('No authentication token')
-
-      const response = await fetch(`${API_URL}/api/appointments`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(appointmentForm)
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchAppointments(token)
+      const isDemoMode = localStorage.getItem('isDemoMode') === 'true'
+      
+      if (isDemoMode) {
+        // Demo mode - save to localStorage
+        const newAppointment: MedicalAppointment = {
+          id: 'appt-' + Date.now(),
+          user_id: user?.id || 'demo',
+          parent_id: appointmentForm.parent_id,
+          date: appointmentForm.date,
+          time: appointmentForm.time,
+          doctor: appointmentForm.doctor,
+          specialty: appointmentForm.specialty,
+          location: appointmentForm.location,
+          reason: appointmentForm.reason,
+          notes: appointmentForm.notes,
+          completed: false,
+          created_at: new Date().toISOString()
+        }
+        
+        const updatedAppointments = [...appointments, newAppointment]
+        setAppointments(updatedAppointments)
+        
+        // Save to localStorage
+        const demoData = JSON.parse(localStorage.getItem('demoData') || '{}')
+        demoData.appointments = updatedAppointments
+        localStorage.setItem('demoData', JSON.stringify(demoData))
+        
+        // Reset form
         setAppointmentForm({
           parent_id: '',
           date: '',
@@ -834,12 +846,44 @@ function App() {
           reason: '',
           notes: ''
         })
+        setAppointmentNaturalInput('')
         setShowAppointmentForm(false)
       } else {
-        setError(data.error || 'Failed to create appointment')
+        // Server mode
+        const token = localStorage.getItem('token')
+        if (!token) throw new Error('No authentication token')
+
+        const response = await fetch(`${API_URL}/api/appointments`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(appointmentForm)
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+          await fetchAppointments(token)
+          setAppointmentForm({
+            parent_id: '',
+            date: '',
+            time: '',
+            doctor: '',
+            specialty: '',
+            location: '',
+            reason: '',
+            notes: ''
+          })
+          setAppointmentNaturalInput('')
+          setShowAppointmentForm(false)
+        } else {
+          setError(data.error || 'Failed to create appointment')
+        }
       }
     } catch (error) {
-      setError('Network error. Please try again.')
+      setError('Failed to save appointment. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -851,22 +895,30 @@ function App() {
     setError('')
 
     try {
-      const token = localStorage.getItem('token')
-      if (!token) throw new Error('No authentication token')
-
-      const response = await fetch(`${API_URL}/api/notes`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(noteForm)
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchMedicalNotes(token)
+      const isDemoMode = localStorage.getItem('isDemoMode') === 'true'
+      
+      if (isDemoMode) {
+        // Demo mode - save to localStorage
+        const newNote: MedicalNote = {
+          id: 'note-' + Date.now(),
+          user_id: user?.id || 'demo',
+          parent_id: noteForm.parent_id,
+          date: noteForm.date,
+          type: noteForm.type,
+          title: noteForm.title,
+          content: noteForm.content,
+          created_at: new Date().toISOString()
+        }
+        
+        const updatedNotes = [...notes, newNote]
+        setNotes(updatedNotes)
+        
+        // Save to localStorage
+        const demoData = JSON.parse(localStorage.getItem('demoData') || '{}')
+        demoData.notes = updatedNotes
+        localStorage.setItem('demoData', JSON.stringify(demoData))
+        
+        // Reset form
         setNoteForm({
           parent_id: '',
           date: '',
@@ -874,9 +926,38 @@ function App() {
           title: '',
           content: ''
         })
+        setNoteNaturalInput('')
         setShowNoteForm(false)
       } else {
-        setError(data.error || 'Failed to create note')
+        // Server mode
+        const token = localStorage.getItem('token')
+        if (!token) throw new Error('No authentication token')
+
+        const response = await fetch(`${API_URL}/api/notes`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(noteForm)
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+          await fetchMedicalNotes(token)
+          setNoteForm({
+            parent_id: '',
+            date: '',
+            type: 'general',
+            title: '',
+            content: ''
+          })
+          setNoteNaturalInput('')
+          setShowNoteForm(false)
+        } else {
+          setError(data.error || 'Failed to create note')
+        }
       }
     } catch (error) {
       setError('Network error. Please try again.')
