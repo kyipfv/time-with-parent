@@ -1259,7 +1259,9 @@ function App() {
                               <span className="age-separator">•</span>
                               <span className="user-age">you're {userAge}</span>
                             </p>
-                            <p className="parent-birthdate">Born {new Date(parent.birth_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                            <p className="parent-details" style={{ fontSize: '13px', color: '#8e8e93', marginTop: '4px' }}>
+                              Born {new Date(parent.birth_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </p>
                           </>
                         )}
                       </div>
@@ -2050,15 +2052,19 @@ function App() {
                         <input 
                           type="date" 
                           className="date-input"
-                          id="userBirthDate"
-                          defaultValue={userBirthDate}
+                          value={userBirthDate}
+                          onChange={(e) => setUserBirthDate(e.target.value)}
                           max={new Date().toISOString().split('T')[0]}
                         />
                       </div>
                       
                       <div className="control-group">
                         <label>How often do you typically call?</label>
-                        <select className="frequency-select" id="contactFrequency" defaultValue={callFrequency}>
+                        <select 
+                          className="frequency-select" 
+                          value={callFrequency}
+                          onChange={(e) => setCallFrequency(parseInt(e.target.value))}
+                        >
                           <option value="365">Daily calls (365 times/year)</option>
                           <option value="182">Every other day (182 times/year)</option>
                           <option value="104">Twice a week (104 calls/year)</option>
@@ -2070,7 +2076,11 @@ function App() {
                       
                       <div className="control-group">
                         <label>How often do you visit?</label>
-                        <select className="frequency-select" id="visitFrequency" defaultValue={visitFrequency}>
+                        <select 
+                          className="frequency-select" 
+                          value={visitFrequency}
+                          onChange={(e) => setVisitFrequency(parseInt(e.target.value))}
+                        >
                           <option value="52">Weekly visits (52 times/year)</option>
                           <option value="26">Bi-weekly visits (26 times/year)</option>
                           <option value="12">Monthly visits (12 times/year)</option>
@@ -2081,24 +2091,13 @@ function App() {
                       </div>
                       
                       <button className="recalculate-btn" onClick={() => {
-                        // Get the values from the inputs
-                        const userBirthInput = document.getElementById('userBirthDate') as HTMLInputElement
-                        const callFreqInput = document.getElementById('contactFrequency') as HTMLSelectElement
-                        const visitFreqInput = document.getElementById('visitFrequency') as HTMLSelectElement
+                        // Save to localStorage
+                        localStorage.setItem('userBirthDate', userBirthDate)
+                        localStorage.setItem('callFrequency', callFrequency.toString())
+                        localStorage.setItem('visitFrequency', visitFrequency.toString())
                         
-                        if (userBirthInput && callFreqInput && visitFreqInput) {
-                          setUserBirthDate(userBirthInput.value)
-                          setCallFrequency(parseInt(callFreqInput.value))
-                          setVisitFrequency(parseInt(visitFreqInput.value))
-                          
-                          // Save to localStorage
-                          localStorage.setItem('userBirthDate', userBirthInput.value)
-                          localStorage.setItem('callFrequency', callFreqInput.value)
-                          localStorage.setItem('visitFrequency', visitFreqInput.value)
-                          
-                          // Show confirmation
-                          alert('✅ Settings saved! All time estimates have been updated.')
-                        }
+                        // Show confirmation
+                        alert('✅ Settings saved! All time estimates have been updated.')
                       }}>
                         💾 Save Settings
                       </button>
