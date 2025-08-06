@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase, isSupabaseConfigured } from './lib/supabase'
+import { safeSupabase, isSupabaseConfigured } from './lib/supabase'
 import './App.css'
 
 interface User {
@@ -360,7 +360,13 @@ function App() {
       }
 
       // Try Supabase login
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      const supabaseClient = safeSupabase()
+      if (!supabaseClient) {
+        setError('Authentication not configured. Please use demo mode.')
+        return
+      }
+      
+      const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
         email: loginForm.email,
         password: loginForm.password
       })
@@ -426,7 +432,23 @@ function App() {
       }
 
       // Try Supabase signup
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      const supabaseClient = safeSupabase()
+      if (!supabaseClient) {
+        // Fall back to demo mode if Supabase not configured
+        const demoUser = {
+          id: 'demo-' + Date.now(),
+          email: registerForm.email,
+          name: registerForm.name,
+          birth_date: registerForm.birthDate
+        }
+        localStorage.setItem('isDemoMode', 'true')
+        localStorage.setItem('user', JSON.stringify(demoUser))
+        setUser(demoUser)
+        setCurrentScreen('onboarding')
+        return
+      }
+      
+      const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
         email: registerForm.email,
         password: registerForm.password,
         options: {
@@ -440,7 +462,7 @@ function App() {
       if (signUpError) {
         // If user already exists, try to sign them in
         if (signUpError.message.includes('already registered')) {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
             email: registerForm.email,
             password: registerForm.password
           })
@@ -478,7 +500,7 @@ function App() {
         setCurrentScreen('onboarding')
       } else {
         // No session (email confirmation may be required), try immediate login
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
           email: registerForm.email,
           password: registerForm.password
         })
