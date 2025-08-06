@@ -328,6 +328,90 @@ function App() {
     setParentForm({ name: '', age: '', relationship: 'mom' })
   }
 
+  const handleDemoMode = () => {
+    // Set up demo user and data
+    const demoUser = {
+      id: 'demo-user-123',
+      email: 'demo@parentos.com',
+      name: 'Sarah Johnson'
+    }
+    
+    const demoParents = [{
+      id: 'demo-parent-1',
+      name: 'Margaret Johnson',
+      age: 72,
+      relationship: 'mom' as const,
+      personality: ['caring', 'independent', 'creative'],
+      interests: ['gardening', 'reading', 'cooking', 'knitting'],
+      challenges: ['technology', 'mobility'],
+      communication_style: 'calls' as const,
+      relationship_goals: ['more quality time', 'help with technology'],
+      last_contact: '2025-01-05T10:30:00Z'
+    }]
+    
+    const demoAppointments = [
+      {
+        id: 'demo-apt-1',
+        parent_id: 'demo-parent-1',
+        date: '2025-01-15',
+        time: '10:30',
+        doctor: 'Dr. Emily Chen',
+        specialty: 'Cardiology',
+        location: 'Heart Center, 123 Medical Dr',
+        reason: 'Annual checkup and medication review',
+        notes: 'Bring current medication list and blood pressure log',
+        completed: false,
+        follow_up_needed: true
+      },
+      {
+        id: 'demo-apt-2',
+        parent_id: 'demo-parent-1',
+        date: '2025-01-08',
+        time: '14:00',
+        doctor: 'Dr. Robert Kim',
+        specialty: 'Ophthalmology',
+        location: 'Eye Care Clinic, 456 Vision St',
+        reason: 'Routine eye exam',
+        notes: 'Mentioned some blurry vision recently',
+        completed: true,
+        follow_up_needed: false
+      }
+    ]
+    
+    const demoMedicalNotes = [
+      {
+        id: 'demo-note-1',
+        parent_id: 'demo-parent-1',
+        date: '2025-01-08',
+        type: 'appointment' as const,
+        title: 'Eye Exam Results',
+        content: 'Vision is stable. Prescription updated slightly. Dr. Kim recommends coming back in 6 months instead of annual visits due to age.'
+      },
+      {
+        id: 'demo-note-2',
+        parent_id: 'demo-parent-1',
+        date: '2025-01-05',
+        type: 'medication' as const,
+        title: 'Blood Pressure Medication',
+        content: 'Mom mentioned feeling dizzy in the mornings. Need to discuss with Dr. Chen at next appointment. She takes Lisinopril 10mg daily.'
+      },
+      {
+        id: 'demo-note-3',
+        parent_id: 'demo-parent-1',
+        date: '2025-01-03',
+        type: 'symptom' as const,
+        title: 'Knee Pain',
+        content: 'Mom complained about knee pain after long walks. Consider asking about physical therapy options.'
+      }
+    ]
+    
+    setUser(demoUser)
+    setParents(demoParents)
+    setAppointments(demoAppointments)
+    setMedicalNotes(demoMedicalNotes)
+    setCurrentScreen('dashboard')
+  }
+
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -479,6 +563,17 @@ function App() {
                   className="link-button"
                 >
                   Sign up
+                </button>
+              </p>
+
+              <p className="switch-form">
+                <button 
+                  type="button" 
+                  onClick={handleDemoMode}
+                  className="link-button"
+                  style={{ color: '#8B5CF6', textDecoration: 'underline' }}
+                >
+                  🚀 Try Demo Mode (View Dashboard)
                 </button>
               </p>
             </div>
