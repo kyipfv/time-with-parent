@@ -1143,37 +1143,27 @@ body {
   max-width: 1000px;
 }
 
-.screen {
+/* Fix auth screen centering */
+.screen.auth-screen {
   width: 100%;
-  margin: 0 auto;
+  height: 100%;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-direction: column !important;
+}
+
+.screen.dashboard-screen {
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.screen.auth-screen {
-  max-width: 100%;
-}
-
 /* Dashboard and larger screens */
 @media (min-width: 768px) {
-  .screen {
-    max-width: 900px;
-  }
-  
-  /* Keep auth screens centered and smaller */
-  .auth-screen {
-    max-width: 400px !important;
-    margin: 0 auto !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    width: 100% !important;
-  }
-  
-  .auth-screen .container {
-    width: 100%;
-    max-width: 400px;
+  .screen.dashboard-screen {
+    max-width: 100%;
   }
 }
 
