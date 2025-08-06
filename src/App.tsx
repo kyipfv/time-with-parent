@@ -723,84 +723,186 @@ function App() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="screen"
+            className="screen dashboard-screen"
           >
-            <div className="header">
-              <h1>ParentOS Dashboard</h1>
-              <p>Welcome back, {user?.name}!</p>
-              <button onClick={handleLogout} className="btn-logout">Logout</button>
+            <div className="dashboard-header">
+              <div className="header-content">
+                <h1>Welcome back, {user?.name}</h1>
+                <button onClick={handleLogout} className="logout-btn">Sign Out</button>
+              </div>
             </div>
 
             <nav className="navigation">
               <button onClick={() => setCurrentScreen('dashboard')} className="nav-btn active">
-                Dashboard
+                🏠 Dashboard
               </button>
               <button onClick={() => setCurrentScreen('medical')} className="nav-btn">
-                Medical
+                🏥 Medical
               </button>
               <button onClick={() => setCurrentScreen('conversations')} className="nav-btn">
-                Conversations
+                💬 Conversations
               </button>
               <button onClick={() => setCurrentScreen('memories')} className="nav-btn">
-                Memories
+                📸 Memories
               </button>
             </nav>
 
             <div className="dashboard-content">
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <h3>Parents</h3>
-                  <div className="stat-number">{parents.length}</div>
+              <div className="life-calculator">
+                <div className="calculator-header">
+                  <h2>Your Life Measurement Settings</h2>
+                  <p>Adjust these to get your personalized time calculation</p>
                 </div>
-                <div className="stat-card">
-                  <h3>Upcoming Appointments</h3>
-                  <div className="stat-number">{upcomingAppointments.length}</div>
-                </div>
-                <div className="stat-card">
-                  <h3>Medical Notes</h3>
-                  <div className="stat-number">{medicalNotes.length}</div>
+                
+                <div className="calculator-controls">
+                  <div className="control-group">
+                    <label>Expected Life Expectancy</label>
+                    <div className="control-input">
+                      <input 
+                        type="number" 
+                        min="70" 
+                        max="100" 
+                        defaultValue="85"
+                        className="expectancy-input"
+                        id="lifeExpectancy"
+                      />
+                      <span>years</span>
+                    </div>
+                  </div>
+                  
+                  <div className="control-group">
+                    <label>How often do you connect?</label>
+                    <select className="frequency-select" id="contactFrequency" defaultValue="26">
+                      <option value="52">Weekly (52 times/year)</option>
+                      <option value="26">Every 2 weeks (26 times/year)</option>
+                      <option value="12">Monthly (12 times/year)</option>
+                      <option value="6">Every 2 months (6 times/year)</option>
+                      <option value="4">Quarterly (4 times/year)</option>
+                    </select>
+                  </div>
+                  
+                  <button className="recalculate-btn" onClick={() => window.location.reload()}>
+                    🔄 Recalculate
+                  </button>
                 </div>
               </div>
 
-              <div className="content-grid">
-                <div className="content-section">
-                  <h2>Recent Activity</h2>
-                  {recentNotes.length > 0 ? (
-                    <div className="activity-list">
-                      {recentNotes.map(note => (
-                        <div key={note.id} className="activity-item">
-                          <div className="activity-type">{note.type}</div>
-                          <div className="activity-title">{note.title}</div>
-                          <div className="activity-parent">{getParentName(note.parent_id)}</div>
-                          <div className="activity-date">{new Date(note.date).toLocaleDateString()}</div>
+              {parents.map(parent => {
+                // Get user's custom settings
+                const lifeExpectancyInput = document.getElementById('lifeExpectancy') as HTMLInputElement
+                const contactFrequencyInput = document.getElementById('contactFrequency') as HTMLSelectElement
+                
+                const customLifeExpectancy = lifeExpectancyInput?.value ? parseInt(lifeExpectancyInput.value) : 85
+                const customContactFrequency = contactFrequencyInput?.value ? parseInt(contactFrequencyInput.value) : 26
+                
+                // Calculate time left based on user settings
+                const currentAge = parent.age || 75
+                const yearsLeft = Math.max(0, customLifeExpectancy - currentAge)
+                const daysLeft = Math.max(0, yearsLeft * 365)
+                
+                // Calculate meaningful moments left based on user's contact frequency
+                const weeksLeft = Math.max(0, yearsLeft * 52)
+                const momentsLeft = Math.max(0, yearsLeft * customContactFrequency)
+                
+                // Days since last contact
+                const daysSinceContact = parent.last_contact ? 
+                  Math.floor((new Date().getTime() - new Date(parent.last_contact).getTime()) / (1000 * 60 * 60 * 24)) : null
+                
+                return (
+                  <div key={parent.id} className="life-measurement-card">
+                    <div className="parent-header">
+                      <div className="parent-avatar">
+                        <div className="avatar-circle">
+                          {parent.name.split(' ').map(n => n[0]).join('')}
                         </div>
-                      ))}
+                      </div>
+                      <div className="parent-identity">
+                        <h2 className="parent-name">{parent.name}</h2>
+                        <p className="parent-relationship">Your {parent.relationship}</p>
+                        {parent.age && <p className="parent-age">{parent.age} years old</p>}
+                      </div>
                     </div>
-                  ) : (
-                    <p>No recent activity</p>
-                  )}
-                </div>
-
-                <div className="content-section">
-                  <h2>Upcoming Appointments</h2>
-                  {upcomingAppointments.length > 0 ? (
-                    <div className="appointments-list">
-                      {upcomingAppointments.slice(0, 3).map(appointment => (
-                        <div key={appointment.id} className="appointment-item">
-                          <div className="appointment-date">
-                            {new Date(appointment.date).toLocaleDateString()}
+                    
+                    <div className="time-awareness">
+                      <div className="primary-metric">
+                        <div className="metric-value">{daysLeft.toLocaleString()}</div>
+                        <div className="metric-label">Days Remaining</div>
+                        <div className="metric-context">Based on average life expectancy</div>
+                      </div>
+                      
+                      <div className="secondary-metrics">
+                        <div className="secondary-metric">
+                          <div className="metric-number">{weeksLeft}</div>
+                          <div className="metric-text">Weeks</div>
+                        </div>
+                        <div className="secondary-metric">
+                          <div className="metric-number">{momentsLeft}</div>
+                          <div className="metric-text">Visits</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="connection-status">
+                      {daysSinceContact !== null ? (
+                        <div className={`last-contact ${daysSinceContact > 7 ? 'overdue' : daysSinceContact > 3 ? 'due-soon' : 'recent'}`}>
+                          <div className="contact-indicator">
+                            <div className="contact-days">{daysSinceContact}</div>
+                            <div className="contact-label">days since last contact</div>
                           </div>
-                          <div className="appointment-time">{appointment.time}</div>
-                          <div className="appointment-doctor">{appointment.doctor}</div>
-                          <div className="appointment-parent">{getParentName(appointment.parent_id)}</div>
+                          {daysSinceContact > 7 && (
+                            <div className="contact-reminder">Time to reach out</div>
+                          )}
                         </div>
-                      ))}
+                      ) : (
+                        <div className="no-contact-data">
+                          <div className="contact-prompt">When did you last connect?</div>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <p>No upcoming appointments</p>
-                  )}
+                    
+                    <div className="action-section">
+                      <div className="action-prompt">
+                        <h3>How will you measure this relationship?</h3>
+                        <p>Every day counts. Every conversation matters.</p>
+                      </div>
+                      
+                      <div className="quick-actions">
+                        <button className="action-btn primary" onClick={() => window.open(`tel:${parent.phone || ''}`, '_self')}>
+                          📞 Call Now
+                        </button>
+                        <button className="action-btn secondary" onClick={() => setCurrentScreen('conversations')}>
+                          💬 Start Conversation
+                        </button>
+                        <button className="action-btn secondary" onClick={() => setCurrentScreen('memories')}>
+                          📸 Capture Memory
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+              
+              {parents.length === 0 && (
+                <div className="meaningful-empty-state">
+                  <div className="empty-content">
+                    <h2>Time is finite. Love is infinite.</h2>
+                    <p>Add a parent to start measuring what matters most — the time you have left together.</p>
+                    <div className="empty-stats">
+                      <div className="empty-stat">
+                        <div className="empty-number">~30,000</div>
+                        <div className="empty-label">Average days in a life</div>
+                      </div>
+                      <div className="empty-stat">
+                        <div className="empty-number">?</div>
+                        <div className="empty-label">Days left with your parents</div>
+                      </div>
+                    </div>
+                    <button onClick={() => setCurrentScreen('onboarding')} className="meaningful-cta">
+                      Start Measuring What Matters
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </motion.div>
         )}
