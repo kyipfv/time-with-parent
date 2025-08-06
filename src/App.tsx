@@ -184,19 +184,19 @@ function App() {
       const data = await response.json()
 
       if (response.ok) {
-        localStorage.setItem('token', data.token)
+        localStorage.setItem('token', data.session.access_token)
         localStorage.setItem('user', JSON.stringify(data.user))
         setUser(data.user)
         
         // Check if user has parents
-        const parents = await fetchParents(data.token)
+        const parents = await fetchParents(data.session.access_token)
         if (parents.length === 0) {
           setCurrentScreen('onboarding')
         } else {
           setCurrentScreen('dashboard')
           setParents(parents)
-          fetchAppointments(data.token)
-          fetchMedicalNotes(data.token)
+          fetchAppointments(data.session.access_token)
+          fetchMedicalNotes(data.session.access_token)
         }
       } else {
         setError(data.error || 'Login failed')
@@ -225,7 +225,7 @@ function App() {
       const data = await response.json()
 
       if (response.ok) {
-        localStorage.setItem('token', data.token)
+        localStorage.setItem('token', data.session.access_token)
         localStorage.setItem('user', JSON.stringify(data.user))
         setUser(data.user)
         setCurrentScreen('onboarding')
