@@ -951,25 +951,39 @@ function App() {
                     </div>
                     <div className="parents-list">
                       {parents.map(parent => (
-                        <button 
-                          key={parent.id} 
-                          className="parent-item"
-                          onClick={() => {
-                            // Could implement parent-specific view
-                            setCurrentScreen('dashboard')
-                          }}
-                        >
-                          <div className="parent-item-avatar">
-                            {parent.relationship === 'mom' || parent.relationship === 'stepmom' ? '👩' :
-                             parent.relationship === 'dad' || parent.relationship === 'stepdad' ? '👨' :
-                             parent.relationship === 'grandmother' ? '👵' :
-                             parent.relationship === 'grandfather' ? '👴' : '👤'}
-                          </div>
-                          <div className="parent-item-details">
-                            <div className="parent-item-name">{parent.name}</div>
-                            <div className="parent-item-relationship">{parent.relationship}</div>
-                          </div>
-                        </button>
+                        <div key={parent.id} className="parent-item-wrapper">
+                          <button 
+                            className="parent-item"
+                            onClick={() => {
+                              setCurrentScreen('dashboard')
+                            }}
+                          >
+                            <div className="parent-item-avatar">
+                              {parent.relationship === 'mom' || parent.relationship === 'stepmom' ? '👩' :
+                               parent.relationship === 'dad' || parent.relationship === 'stepdad' ? '👨' :
+                               parent.relationship === 'grandmother' ? '👵' :
+                               parent.relationship === 'grandfather' ? '👴' : '👤'}
+                            </div>
+                            <div className="parent-item-details">
+                              <div className="parent-item-name">{parent.name}</div>
+                              <div className="parent-item-relationship">{parent.relationship}</div>
+                            </div>
+                          </button>
+                          <button
+                            className="parent-delete-btn"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              const deletedParent = parents.find(p => p.id === parent.id)
+                              if (deletedParent) {
+                                setRecentlyDeleted([...recentlyDeleted, deletedParent])
+                                setParents(parents.filter(p => p.id !== parent.id))
+                              }
+                            }}
+                            title="Remove parent"
+                          >
+                            ×
+                          </button>
+                        </div>
                       ))}
                     </div>
                     <button 
@@ -979,6 +993,42 @@ function App() {
                       <span className="add-icon">+</span>
                       <span>Add Parent</span>
                     </button>
+                    
+                    {recentlyDeleted.length > 0 && (
+                      <div className="deleted-section">
+                        <button 
+                          onClick={() => setShowDeleted(!showDeleted)}
+                          className="show-deleted-btn"
+                        >
+                          <span>{showDeleted ? '▼' : '▶'}</span>
+                          <span>Recently Removed ({recentlyDeleted.length})</span>
+                        </button>
+                        {showDeleted && (
+                          <div className="deleted-list">
+                            {recentlyDeleted.map(parent => (
+                              <div key={parent.id} className="deleted-item">
+                                <span className="deleted-name">{parent.name}</span>
+                                <button
+                                  className="restore-btn"
+                                  onClick={() => {
+                                    setParents([...parents, parent])
+                                    setRecentlyDeleted(recentlyDeleted.filter(p => p.id !== parent.id))
+                                  }}
+                                >
+                                  Restore
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              className="clear-deleted-btn"
+                              onClick={() => setRecentlyDeleted([])}
+                            >
+                              Clear All
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
                 
