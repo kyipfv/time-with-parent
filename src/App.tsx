@@ -1084,9 +1084,8 @@ function App() {
                         <button 
                           className="toggle-stats-btn"
                           onClick={() => setShowStats(!showStats)}
-                          title={showStats ? 'Hide statistics' : 'Show statistics'}
                         >
-                          {showStats ? '👁️' : '👁️‍🗨️'}
+                          {showStats ? 'Hide Stats' : 'Show Stats'}
                         </button>
                       </div>
                     </div>
