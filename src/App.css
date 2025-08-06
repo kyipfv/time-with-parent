@@ -1030,8 +1030,14 @@ body {
 
 .screen {
   width: 100%;
-  max-width: 400px;
   margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.screen.auth-screen {
+  max-width: 100%;
 }
 
 /* Dashboard and larger screens */
@@ -1062,6 +1068,8 @@ body {
   border-radius: 20px;
   padding: 32px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
 }
 
 .header {
