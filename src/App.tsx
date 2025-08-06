@@ -8,13 +8,6 @@ interface User {
   name: string
 }
 
-interface Session {
-  access_token: string
-  refresh_token: string
-  expires_in: number
-  user: User
-}
-
 interface Parent {
   id: string
   name: string
@@ -51,29 +44,25 @@ interface MedicalNote {
   content: string
 }
 
-type Screen = 'login' | 'register' | 'onboarding' | 'dashboard' | 'conversations' | 'memories' | 'gifts' | 'habits' | 'medical'
+type Screen = 'login' | 'register' | 'onboarding' | 'dashboard' | 'conversations' | 'memories' | 'medical'
 
-const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3001' : ''
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('login')
   const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
   const [parents, setParents] = useState<Parent[]>([])
   const [appointments, setAppointments] = useState<MedicalAppointment[]>([])
   const [medicalNotes, setMedicalNotes] = useState<MedicalNote[]>([])
   
-  // Form states
+  // Auth forms
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '' })
-  const [parentForm, setParentForm] = useState({
-    name: '',
-    age: '',
-    relationship: 'mom' as 'mom' | 'dad' | 'guardian',
-    personality: [] as string[],
-    interests: [] as string[],
-    challenges: [] as string[]
-  })
+  const [parentForm, setParentForm] = useState({ name: '', age: '', relationship: 'mom' as 'mom' | 'dad' | 'guardian' })
+  
+  // Form states
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [appointmentForm, setAppointmentForm] = useState({
     parent_id: '',
     date: '',
@@ -94,50 +83,87 @@ function App() {
 
   const [showAppointmentForm, setShowAppointmentForm] = useState(false)
   const [showNoteForm, setShowNoteForm] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
 
+  // Check for existing session on load
   useEffect(() => {
-    const savedSession = localStorage.getItem('parentos_session')
-    if (savedSession) {
-      const session = JSON.parse(savedSession)
-      setSession(session)
-      setUser(session.user)
-      setCurrentScreen('dashboard')
-      fetchUserData(session.access_token)
+    const token = localStorage.getItem('token')
+    const userData = localStorage.getItem('user')
+    
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData)
+        setUser(user)
+        
+        // Check if user has parents, if not show onboarding
+        fetchParents(token).then(parents => {
+          if (parents.length === 0) {
+            setCurrentScreen('onboarding')
+          } else {
+            setCurrentScreen('dashboard')
+            setParents(parents)
+            fetchAppointments(token)
+            fetchMedicalNotes(token)
+          }
+        }).catch(() => {
+          // Token might be invalid
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          setCurrentScreen('login')
+        })
+      } catch (error) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        setCurrentScreen('login')
+      }
     }
   }, [])
 
-  const fetchUserData = async (token: string) => {
-    try {
-      const [parentsRes, appointmentsRes, notesRes] = await Promise.all([
-        fetch(`${API_BASE}/api/parents`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${API_BASE}/api/appointments`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${API_BASE}/api/notes`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      ])
+  const fetchParents = async (token: string) => {
+    const response = await fetch(`${API_URL}/api/parents`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) throw new Error('Failed to fetch parents')
+    const data = await response.json()
+    return data.parents || []
+  }
 
-      if (parentsRes.ok) {
-        const parentsData = await parentsRes.json()
-        setParents(parentsData.parents)
-      }
+  const fetchAppointments = async (token: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/appointments`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
       
-      if (appointmentsRes.ok) {
-        const appointmentsData = await appointmentsRes.json()
-        setAppointments(appointmentsData.appointments)
-      }
-      
-      if (notesRes.ok) {
-        const notesData = await notesRes.json()
-        setMedicalNotes(notesData.notes)
+      if (response.ok) {
+        const data = await response.json()
+        setAppointments(data.appointments || [])
       }
     } catch (error) {
-      console.error('Error fetching user data:', error)
+      console.error('Failed to fetch appointments:', error)
+    }
+  }
+
+  const fetchMedicalNotes = async (token: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/notes`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMedicalNotes(data.notes || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch medical notes:', error)
     }
   }
 
@@ -147,20 +173,31 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/login`, {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(loginForm)
       })
 
       const data = await response.json()
-      
+
       if (response.ok) {
-        setSession(data.session)
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('user', JSON.stringify(data.user))
         setUser(data.user)
-        localStorage.setItem('parentos_session', JSON.stringify(data.session))
-        setCurrentScreen(parents.length > 0 ? 'dashboard' : 'onboarding')
-        fetchUserData(data.session.access_token)
+        
+        // Check if user has parents
+        const parents = await fetchParents(data.token)
+        if (parents.length === 0) {
+          setCurrentScreen('onboarding')
+        } else {
+          setCurrentScreen('dashboard')
+          setParents(parents)
+          fetchAppointments(data.token)
+          fetchMedicalNotes(data.token)
+        }
       } else {
         setError(data.error || 'Login failed')
       }
@@ -177,18 +214,20 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/register`, {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(registerForm)
       })
 
       const data = await response.json()
-      
+
       if (response.ok) {
-        setSession(data.session)
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('user', JSON.stringify(data.user))
         setUser(data.user)
-        localStorage.setItem('parentos_session', JSON.stringify(data.session))
         setCurrentScreen('onboarding')
       } else {
         setError(data.error || 'Registration failed')
@@ -200,47 +239,42 @@ function App() {
     }
   }
 
-  const handleLogout = () => {
-    setSession(null)
-    setUser(null)
-    setParents([])
-    setAppointments([])
-    setMedicalNotes([])
-    localStorage.removeItem('parentos_session')
-    setCurrentScreen('login')
-  }
-
   const handleCreateParent = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!session) return
-
     setLoading(true)
+    setError('')
+
     try {
-      const response = await fetch(`${API_BASE}/api/parents`, {
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error('No authentication token')
+
+      const parentData = {
+        name: parentForm.name,
+        age: parentForm.age ? parseInt(parentForm.age) : null,
+        relationship: parentForm.relationship,
+        personality: [],
+        interests: [],
+        challenges: [],
+        relationship_goals: []
+      }
+
+      const response = await fetch(`${API_URL}/api/parents`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ...parentForm,
-          age: parentForm.age ? parseInt(parentForm.age) : null
-        })
+        body: JSON.stringify(parentData)
       })
 
       const data = await response.json()
-      
+
       if (response.ok) {
-        setParents([...parents, data.parent])
-        setParentForm({
-          name: '',
-          age: '',
-          relationship: 'mom',
-          personality: [],
-          interests: [],
-          challenges: []
-        })
+        const updatedParents = await fetchParents(token)
+        setParents(updatedParents)
         setCurrentScreen('dashboard')
+        fetchAppointments(token)
+        fetchMedicalNotes(token)
       } else {
         setError(data.error || 'Failed to create parent profile')
       }
@@ -251,25 +285,41 @@ function App() {
     }
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setUser(null)
+    setParents([])
+    setAppointments([])
+    setMedicalNotes([])
+    setCurrentScreen('login')
+    setLoginForm({ email: '', password: '' })
+    setRegisterForm({ name: '', email: '', password: '' })
+    setParentForm({ name: '', age: '', relationship: 'mom' })
+  }
+
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!session) return
-
     setLoading(true)
+    setError('')
+
     try {
-      const response = await fetch(`${API_BASE}/api/appointments`, {
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error('No authentication token')
+
+      const response = await fetch(`${API_URL}/api/appointments`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(appointmentForm)
       })
 
       const data = await response.json()
-      
+
       if (response.ok) {
-        setAppointments([...appointments, data.appointment])
+        await fetchAppointments(token)
         setAppointmentForm({
           parent_id: '',
           date: '',
@@ -293,23 +343,26 @@ function App() {
 
   const handleCreateNote = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!session) return
-
     setLoading(true)
+    setError('')
+
     try {
-      const response = await fetch(`${API_BASE}/api/notes`, {
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error('No authentication token')
+
+      const response = await fetch(`${API_URL}/api/notes`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(noteForm)
       })
 
       const data = await response.json()
-      
+
       if (response.ok) {
-        setMedicalNotes([...medicalNotes, data.note])
+        await fetchMedicalNotes(token)
         setNoteForm({
           parent_id: '',
           date: '',
