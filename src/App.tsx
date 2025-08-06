@@ -61,7 +61,7 @@ interface MedicalNote {
   content: string
 }
 
-type Screen = 'login' | 'register' | 'onboarding' | 'dashboard' | 'conversations' | 'memories' | 'medical'
+type Screen = 'login' | 'register' | 'onboarding' | 'dashboard' | 'conversations' | 'memories' | 'medical' | 'settings'
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3001')
 
@@ -105,9 +105,17 @@ function App() {
   const [editingParent, setEditingParent] = useState<string | null>(null)
   const [showStats, setShowStats] = useState(true)
   const [editForm, setEditForm] = useState<Parent | null>(null)
-  const [userBirthDate, setUserBirthDate] = useState('1990-01-01')
-  const [callFrequency, setCallFrequency] = useState(52)
-  const [visitFrequency, setVisitFrequency] = useState(4)
+  const [userBirthDate, setUserBirthDate] = useState(() => {
+    return localStorage.getItem('userBirthDate') || '1990-01-01'
+  })
+  const [callFrequency, setCallFrequency] = useState(() => {
+    const saved = localStorage.getItem('callFrequency')
+    return saved ? parseInt(saved) : 52
+  })
+  const [visitFrequency, setVisitFrequency] = useState(() => {
+    const saved = localStorage.getItem('visitFrequency')
+    return saved ? parseInt(saved) : 4
+  })
   const [deletingParent, setDeletingParent] = useState<string | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [recentlyDeleted, setRecentlyDeleted] = useState<Parent[]>([])
@@ -966,6 +974,10 @@ function App() {
                     <div className="nav-icon">📸</div>
                     <span>Memories</span>
                   </button>
+                  <button onClick={() => setCurrentScreen('settings')} className="nav-item">
+                    <div className="nav-icon">⚙️</div>
+                    <span>Settings</span>
+                  </button>
                 </nav>
                 
                 {parents.length > 0 && (
@@ -1129,59 +1141,6 @@ function App() {
                       </button>
                     </div>
                   </div>
-                </div>
-              </div>
-              
-              <div className="life-calculator">
-                <div className="calculator-header">
-                  <h2>✨ Connection Planner</h2>
-                  <p>Let's plan all the wonderful moments you'll share with your parents</p>
-                </div>
-                
-                <div className="calculator-controls">
-                  <div className="control-group">
-                    <label>Your Birth Date</label>
-                    <input 
-                      type="date" 
-                      className="date-input"
-                      id="userBirthDate"
-                      defaultValue={user?.birth_date || '1990-01-01'}
-                      max={new Date().toISOString().split('T')[0]}
-                    />
-                  </div>
-                  
-                  <div className="control-group">
-                    <label>How often do you typically call?</label>
-                    <select className="frequency-select" id="contactFrequency" defaultValue="52">
-                      <option value="365">Daily calls (365 times/year)</option>
-                      <option value="182">Every other day (182 times/year)</option>
-                      <option value="104">Twice a week (104 calls/year)</option>
-                      <option value="52">Weekly calls (52 times/year)</option>
-                      <option value="26">Bi-weekly calls (26 times/year)</option>
-                      <option value="12">Monthly calls (12 times/year)</option>
-                    </select>
-                  </div>
-                  
-                  <div className="control-group">
-                    <label>How often do you visit?</label>
-                    <select className="frequency-select" id="visitFrequency" defaultValue="4">
-                      <option value="52">Weekly visits (52 times/year)</option>
-                      <option value="26">Bi-weekly visits (26 times/year)</option>
-                      <option value="12">Monthly visits (12 times/year)</option>
-                      <option value="6">Every 2 months (6 visits/year)</option>
-                      <option value="4">Quarterly visits (4 times/year)</option>
-                      <option value="2">Twice a year (2 visits/year)</option>
-                    </select>
-                  </div>
-                  
-                  <button className="recalculate-btn" onClick={() => {
-                    // Force re-render by updating a state variable
-                    setQuickNotes(prev => ({ ...prev }))
-                    // Show confirmation
-                    alert('✅ Recalculated! All time estimates have been updated based on your new settings.')
-                  }}>
-                    🔄 Recalculate Everything
-                  </button>
                 </div>
               </div>
 
@@ -1561,6 +1520,10 @@ function App() {
                   <button onClick={() => setCurrentScreen('memories')} className="nav-item">
                     <div className="nav-icon">📸</div>
                     <span>Memories</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('settings')} className="nav-item">
+                    <div className="nav-icon">⚙️</div>
+                    <span>Settings</span>
                   </button>
                 </nav>
                 
@@ -2013,6 +1976,132 @@ function App() {
                           <li>Shareable memory books</li>
                         </ul>
                       )}
+                    </div>
+                  </div>
+                </div>
+              </main>
+            </div>
+          </motion.div>
+        )}
+
+        {currentScreen === 'settings' && (
+          <motion.div
+            key="settings"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="screen dashboard-screen"
+          >
+            <div className="apple-layout">
+              <aside className="sidebar">
+                <div className="sidebar-header">
+                  <h1>ParentOS</h1>
+                  <div className="user-info">
+                    <div className="user-avatar">
+                      {user?.name?.charAt(0) || 'U'}
+                    </div>
+                    <div className="user-details">
+                      <div className="user-name">{user?.name || 'User'}</div>
+                      <button onClick={handleLogout} className="logout-link">Sign Out</button>
+                    </div>
+                  </div>
+                </div>
+
+                <nav className="sidebar-nav">
+                  <button onClick={() => setCurrentScreen('dashboard')} className="nav-item">
+                    <div className="nav-icon">📊</div>
+                    <span>Dashboard</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('medical')} className="nav-item">
+                    <div className="nav-icon">🏥</div>
+                    <span>Medical</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('conversations')} className="nav-item">
+                    <div className="nav-icon">💬</div>
+                    <span>Conversations</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('memories')} className="nav-item">
+                    <div className="nav-icon">📸</div>
+                    <span>Memories</span>
+                  </button>
+                  <button onClick={() => setCurrentScreen('settings')} className="nav-item active">
+                    <div className="nav-icon">⚙️</div>
+                    <span>Settings</span>
+                  </button>
+                </nav>
+              </aside>
+
+              <main className="main-content">
+                <div className="page-content">
+                  <div className="page-header">
+                    <h1>⚙️ Settings</h1>
+                    <p>Customize your ParentOS experience</p>
+                  </div>
+
+                  <div className="life-calculator">
+                    <div className="calculator-header">
+                      <h2>✨ Connection Planner</h2>
+                      <p>Plan how often you'll connect with your parents</p>
+                    </div>
+                    
+                    <div className="calculator-controls">
+                      <div className="control-group">
+                        <label>Your Birth Date</label>
+                        <input 
+                          type="date" 
+                          className="date-input"
+                          id="userBirthDate"
+                          defaultValue={userBirthDate}
+                          max={new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
+                      
+                      <div className="control-group">
+                        <label>How often do you typically call?</label>
+                        <select className="frequency-select" id="contactFrequency" defaultValue={callFrequency}>
+                          <option value="365">Daily calls (365 times/year)</option>
+                          <option value="182">Every other day (182 times/year)</option>
+                          <option value="104">Twice a week (104 calls/year)</option>
+                          <option value="52">Weekly calls (52 times/year)</option>
+                          <option value="26">Bi-weekly calls (26 times/year)</option>
+                          <option value="12">Monthly calls (12 times/year)</option>
+                        </select>
+                      </div>
+                      
+                      <div className="control-group">
+                        <label>How often do you visit?</label>
+                        <select className="frequency-select" id="visitFrequency" defaultValue={visitFrequency}>
+                          <option value="52">Weekly visits (52 times/year)</option>
+                          <option value="26">Bi-weekly visits (26 times/year)</option>
+                          <option value="12">Monthly visits (12 times/year)</option>
+                          <option value="6">Every 2 months (6 visits/year)</option>
+                          <option value="4">Quarterly visits (4 times/year)</option>
+                          <option value="2">Twice a year (2 visits/year)</option>
+                        </select>
+                      </div>
+                      
+                      <button className="recalculate-btn" onClick={() => {
+                        // Get the values from the inputs
+                        const userBirthInput = document.getElementById('userBirthDate') as HTMLInputElement
+                        const callFreqInput = document.getElementById('contactFrequency') as HTMLSelectElement
+                        const visitFreqInput = document.getElementById('visitFrequency') as HTMLSelectElement
+                        
+                        if (userBirthInput && callFreqInput && visitFreqInput) {
+                          setUserBirthDate(userBirthInput.value)
+                          setCallFrequency(parseInt(callFreqInput.value))
+                          setVisitFrequency(parseInt(visitFreqInput.value))
+                          
+                          // Save to localStorage
+                          localStorage.setItem('userBirthDate', userBirthInput.value)
+                          localStorage.setItem('callFrequency', callFreqInput.value)
+                          localStorage.setItem('visitFrequency', visitFreqInput.value)
+                          
+                          // Show confirmation
+                          alert('✅ Settings saved! All time estimates have been updated.')
+                        }
+                      }}>
+                        💾 Save Settings
+                      </button>
                     </div>
                   </div>
                 </div>
