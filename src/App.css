@@ -32,6 +32,11 @@ body {
   .screen {
     max-width: 900px;
   }
+  
+  /* Keep auth screens centered and smaller */
+  .auth-screen {
+    max-width: 400px !important;
+  }
 }
 
 .container {
