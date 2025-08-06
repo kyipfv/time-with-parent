@@ -5,10 +5,17 @@ const morgan = require('morgan');
 const path = require('path');
 require('dotenv').config();
 
-const authRoutes = require('./routes/auth');
-const parentRoutes = require('./routes/parents');
-const appointmentRoutes = require('./routes/appointments');
-const noteRoutes = require('./routes/notes');
+// Import routes with error handling
+let authRoutes, parentRoutes, appointmentRoutes, noteRoutes;
+try {
+  authRoutes = require('./routes/auth');
+  parentRoutes = require('./routes/parents');
+  appointmentRoutes = require('./routes/appointments');
+  noteRoutes = require('./routes/notes');
+} catch (error) {
+  console.error('Error loading routes:', error);
+  process.exit(1);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -67,8 +74,24 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Graceful error handling
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 ParentOS server running on port ${PORT}`);
   console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Client URL: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
+  console.log(`🔑 Supabase URL: ${process.env.SUPABASE_URL ? 'configured' : 'missing'}`);
+  console.log(`🔐 Supabase Keys: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? 'configured' : 'missing'}`);
+}).on('error', (error) => {
+  console.error('Server failed to start:', error);
+  process.exit(1);
 });
