@@ -672,6 +672,125 @@ body {
   font-size: 18px;
 }
 
+/* Parents List in Sidebar */
+.sidebar-section {
+  margin-top: 24px;
+  padding: 0 16px;
+  border-top: 1px solid #f2f2f7;
+  padding-top: 24px;
+}
+
+.sidebar-section-header {
+  margin-bottom: 12px;
+  padding: 0 8px;
+}
+
+.sidebar-section-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.parents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.parent-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  text-align: left;
+}
+
+.parent-item:hover {
+  background: #f2f2f7;
+}
+
+.parent-item-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #a78bfa, #c084fc);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.parent-item-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.parent-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1c1e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.parent-item-relationship {
+  font-size: 12px;
+  color: #8e8e93;
+  text-transform: capitalize;
+}
+
+.add-parent-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(0, 122, 255, 0.1);
+  border: 1px dashed rgba(0, 122, 255, 0.3);
+  border-radius: 8px;
+  color: #007aff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  text-align: left;
+}
+
+.add-parent-btn.primary {
+  background: linear-gradient(135deg, #007aff, #0051d5);
+  color: white;
+  border: none;
+  justify-content: center;
+}
+
+.add-parent-btn:hover {
+  background: rgba(0, 122, 255, 0.15);
+  border-color: #007aff;
+}
+
+.add-parent-btn.primary:hover {
+  background: linear-gradient(135deg, #0051d5, #003d9e);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.add-icon {
+  font-size: 16px;
+  font-weight: 600;
+}
+
 .main-content {
   flex: 1;
   background: #f2f2f7;

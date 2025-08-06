@@ -829,6 +829,56 @@ function App() {
                     <span>Memories</span>
                   </button>
                 </nav>
+                
+                {parents.length > 0 && (
+                  <div className="sidebar-section">
+                    <div className="sidebar-section-header">
+                      <h3>Your Parents</h3>
+                    </div>
+                    <div className="parents-list">
+                      {parents.map(parent => (
+                        <button 
+                          key={parent.id} 
+                          className="parent-item"
+                          onClick={() => {
+                            // Could implement parent-specific view
+                            setCurrentScreen('dashboard')
+                          }}
+                        >
+                          <div className="parent-item-avatar">
+                            {parent.relationship === 'mom' || parent.relationship === 'stepmom' ? '👩' :
+                             parent.relationship === 'dad' || parent.relationship === 'stepdad' ? '👨' :
+                             parent.relationship === 'grandmother' ? '👵' :
+                             parent.relationship === 'grandfather' ? '👴' : '👤'}
+                          </div>
+                          <div className="parent-item-details">
+                            <div className="parent-item-name">{parent.name}</div>
+                            <div className="parent-item-relationship">{parent.relationship}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <button 
+                      onClick={() => setCurrentScreen('onboarding')} 
+                      className="add-parent-btn"
+                    >
+                      <span className="add-icon">+</span>
+                      <span>Add Parent</span>
+                    </button>
+                  </div>
+                )}
+                
+                {parents.length === 0 && (
+                  <div className="sidebar-section">
+                    <button 
+                      onClick={() => setCurrentScreen('onboarding')} 
+                      className="add-parent-btn primary"
+                    >
+                      <span className="add-icon">+</span>
+                      <span>Add Your First Parent</span>
+                    </button>
+                  </div>
+                )}
               </aside>
 
               <main className="main-content">
@@ -1190,6 +1240,43 @@ function App() {
                     <span>Memories</span>
                   </button>
                 </nav>
+                
+                {parents.length > 0 && (
+                  <div className="sidebar-section">
+                    <div className="sidebar-section-header">
+                      <h3>Your Parents</h3>
+                    </div>
+                    <div className="parents-list">
+                      {parents.map(parent => (
+                        <button 
+                          key={parent.id} 
+                          className="parent-item"
+                          onClick={() => {
+                            setCurrentScreen('dashboard')
+                          }}
+                        >
+                          <div className="parent-item-avatar">
+                            {parent.relationship === 'mom' || parent.relationship === 'stepmom' ? '👩' :
+                             parent.relationship === 'dad' || parent.relationship === 'stepdad' ? '👨' :
+                             parent.relationship === 'grandmother' ? '👵' :
+                             parent.relationship === 'grandfather' ? '👴' : '👤'}
+                          </div>
+                          <div className="parent-item-details">
+                            <div className="parent-item-name">{parent.name}</div>
+                            <div className="parent-item-relationship">{parent.relationship}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <button 
+                      onClick={() => setCurrentScreen('onboarding')} 
+                      className="add-parent-btn"
+                    >
+                      <span className="add-icon">+</span>
+                      <span>Add Parent</span>
+                    </button>
+                  </div>
+                )}
               </aside>
 
               <main className="main-content">
@@ -1529,6 +1616,43 @@ function App() {
                     <span>Memories</span>
                   </button>
                 </nav>
+                
+                {parents.length > 0 && (
+                  <div className="sidebar-section">
+                    <div className="sidebar-section-header">
+                      <h3>Your Parents</h3>
+                    </div>
+                    <div className="parents-list">
+                      {parents.map(parent => (
+                        <button 
+                          key={parent.id} 
+                          className="parent-item"
+                          onClick={() => {
+                            setCurrentScreen('dashboard')
+                          }}
+                        >
+                          <div className="parent-item-avatar">
+                            {parent.relationship === 'mom' || parent.relationship === 'stepmom' ? '👩' :
+                             parent.relationship === 'dad' || parent.relationship === 'stepdad' ? '👨' :
+                             parent.relationship === 'grandmother' ? '👵' :
+                             parent.relationship === 'grandfather' ? '👴' : '👤'}
+                          </div>
+                          <div className="parent-item-details">
+                            <div className="parent-item-name">{parent.name}</div>
+                            <div className="parent-item-relationship">{parent.relationship}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <button 
+                      onClick={() => setCurrentScreen('onboarding')} 
+                      className="add-parent-btn"
+                    >
+                      <span className="add-icon">+</span>
+                      <span>Add Parent</span>
+                    </button>
+                  </div>
+                )}
               </aside>
 
               <main className="main-content">
