@@ -351,6 +351,14 @@ body {
   background: #f2f2f7;
   padding: 24px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.main-content > * {
+  width: 100%;
+  max-width: 1000px;
 }
 
 .screen {
