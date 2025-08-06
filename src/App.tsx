@@ -11,8 +11,8 @@ interface User {
 interface Parent {
   id: string
   name: string
-  age?: number
-  relationship: 'mom' | 'dad' | 'guardian'
+  birth_date: string // YYYY-MM-DD format
+  relationship: 'mom' | 'dad' | 'stepmom' | 'stepdad' | 'guardian' | 'grandmother' | 'grandfather'
   personality: string[]
   interests: string[]
   challenges: string[]
@@ -58,7 +58,7 @@ function App() {
   // Auth forms
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '' })
-  const [parentForm, setParentForm] = useState({ name: '', age: '', relationship: 'mom' as 'mom' | 'dad' | 'guardian' })
+  const [parentForm, setParentForm] = useState({ name: '', birth_date: '', relationship: 'mom' as 'mom' | 'dad' | 'stepmom' | 'stepdad' | 'guardian' | 'grandmother' | 'grandfather' })
   
   // Form states
   const [loading, setLoading] = useState(false)
@@ -280,7 +280,7 @@ function App() {
 
       const parentData = {
         name: parentForm.name,
-        age: parentForm.age ? parseInt(parentForm.age) : null,
+        birth_date: parentForm.birth_date,
         relationship: parentForm.relationship,
         personality: [],
         interests: [],
@@ -325,7 +325,7 @@ function App() {
     setCurrentScreen('login')
     setLoginForm({ email: '', password: '' })
     setRegisterForm({ name: '', email: '', password: '' })
-    setParentForm({ name: '', age: '', relationship: 'mom' })
+    setParentForm({ name: '', birth_date: '', relationship: 'mom' })
   }
 
   const handleDemoMode = () => {
@@ -339,7 +339,7 @@ function App() {
     const demoParents = [{
       id: 'demo-parent-1',
       name: 'Margaret Johnson',
-      age: 72,
+      birth_date: '1952-04-15', // Makes her 72 years old
       relationship: 'mom' as const,
       personality: ['caring', 'independent', 'creative'],
       interests: ['gardening', 'reading', 'cooking', 'knitting'],
@@ -677,14 +677,14 @@ function App() {
                 </div>
 
                 <div className="form-group">
-                  <label>Age (optional)</label>
+                  <label>Birth Date</label>
                   <input
-                    type="number"
-                    value={parentForm.age}
-                    onChange={(e) => setParentForm({ ...parentForm, age: e.target.value })}
-                    min="1"
-                    max="150"
+                    type="date"
+                    value={parentForm.birth_date}
+                    onChange={(e) => setParentForm({ ...parentForm, birth_date: e.target.value })}
+                    required
                     disabled={loading}
+                    max={new Date().toISOString().split('T')[0]} // Can't be in the future
                   />
                 </div>
 
@@ -697,6 +697,10 @@ function App() {
                   >
                     <option value="mom">Mom</option>
                     <option value="dad">Dad</option>
+                    <option value="stepmom">Stepmom</option>
+                    <option value="stepdad">Stepdad</option>
+                    <option value="grandmother">Grandmother</option>
+                    <option value="grandfather">Grandfather</option>
                     <option value="guardian">Guardian</option>
                   </select>
                 </div>
@@ -750,29 +754,15 @@ function App() {
             <div className="dashboard-content">
               <div className="life-calculator">
                 <div className="calculator-header">
-                  <h2>Your Life Measurement Settings</h2>
-                  <p>Adjust these to get your personalized time calculation</p>
+                  <h2>How You Connect</h2>
+                  <p>Tell us how often you typically reach out to each parent</p>
                 </div>
                 
                 <div className="calculator-controls">
                   <div className="control-group">
-                    <label>Expected Life Expectancy</label>
-                    <div className="control-input">
-                      <input 
-                        type="number" 
-                        min="70" 
-                        max="100" 
-                        defaultValue="85"
-                        className="expectancy-input"
-                        id="lifeExpectancy"
-                      />
-                      <span>years</span>
-                    </div>
-                  </div>
-                  
-                  <div className="control-group">
-                    <label>How often do you connect?</label>
+                    <label>How often do you typically connect?</label>
                     <select className="frequency-select" id="contactFrequency" defaultValue="26">
+                      <option value="104">Twice a week (104 times/year)</option>
                       <option value="52">Weekly (52 times/year)</option>
                       <option value="26">Every 2 weeks (26 times/year)</option>
                       <option value="12">Monthly (12 times/year)</option>
@@ -781,28 +771,44 @@ function App() {
                     </select>
                   </div>
                   
+                  <div className="control-group">
+                    <label>Estimated remaining years together</label>
+                    <div className="control-input">
+                      <input 
+                        type="number" 
+                        min="1" 
+                        max="50" 
+                        defaultValue="15"
+                        className="expectancy-input"
+                        id="yearsLeft"
+                      />
+                      <span>years (your estimate)</span>
+                    </div>
+                  </div>
+                  
                   <button className="recalculate-btn" onClick={() => window.location.reload()}>
-                    🔄 Recalculate
+                    🔄 Update Calculations
                   </button>
                 </div>
               </div>
 
               {parents.map(parent => {
                 // Get user's custom settings
-                const lifeExpectancyInput = document.getElementById('lifeExpectancy') as HTMLInputElement
+                const yearsLeftInput = document.getElementById('yearsLeft') as HTMLInputElement
                 const contactFrequencyInput = document.getElementById('contactFrequency') as HTMLSelectElement
                 
-                const customLifeExpectancy = lifeExpectancyInput?.value ? parseInt(lifeExpectancyInput.value) : 85
+                const estimatedYearsLeft = yearsLeftInput?.value ? parseInt(yearsLeftInput.value) : 15
                 const customContactFrequency = contactFrequencyInput?.value ? parseInt(contactFrequencyInput.value) : 26
                 
-                // Calculate time left based on user settings
-                const currentAge = parent.age || 75
-                const yearsLeft = Math.max(0, customLifeExpectancy - currentAge)
-                const daysLeft = Math.max(0, yearsLeft * 365)
+                // Calculate current age from birth date
+                const birthDate = new Date(parent.birth_date)
+                const today = new Date()
+                const currentAge = Math.floor((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25))
                 
-                // Calculate meaningful moments left based on user's contact frequency
-                const weeksLeft = Math.max(0, yearsLeft * 52)
-                const momentsLeft = Math.max(0, yearsLeft * customContactFrequency)
+                // Calculate time left based on user's personal estimate
+                const daysLeft = Math.max(0, estimatedYearsLeft * 365)
+                const weeksLeft = Math.max(0, estimatedYearsLeft * 52)
+                const momentsLeft = Math.max(0, estimatedYearsLeft * customContactFrequency)
                 
                 // Days since last contact
                 const daysSinceContact = parent.last_contact ? 
@@ -819,62 +825,96 @@ function App() {
                       <div className="parent-identity">
                         <h2 className="parent-name">{parent.name}</h2>
                         <p className="parent-relationship">Your {parent.relationship}</p>
-                        {parent.age && <p className="parent-age">{parent.age} years old</p>}
+                        <p className="parent-age">{currentAge} years old</p>
+                        <p className="parent-birthdate">Born {new Date(parent.birth_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                       </div>
                     </div>
                     
-                    <div className="time-awareness">
-                      <div className="primary-metric">
-                        <div className="metric-value">{daysLeft.toLocaleString()}</div>
-                        <div className="metric-label">Days Remaining</div>
-                        <div className="metric-context">Based on average life expectancy</div>
+                    <div className="health-metrics-grid">
+                      <div className="health-card primary-time">
+                        <div className="health-card-header">
+                          <div className="health-icon">⏳</div>
+                          <div className="health-title">Time Remaining</div>
+                        </div>
+                        <div className="health-metric">
+                          <div className="health-number">{daysLeft.toLocaleString()}</div>
+                          <div className="health-unit">days</div>
+                        </div>
+                        <div className="health-subtitle">Based on your estimate</div>
                       </div>
                       
-                      <div className="secondary-metrics">
-                        <div className="secondary-metric">
-                          <div className="metric-number">{weeksLeft}</div>
-                          <div className="metric-text">Weeks</div>
+                      <div className="health-card secondary-time">
+                        <div className="health-card-header">
+                          <div className="health-icon">📅</div>
+                          <div className="health-title">Weeks Left</div>
                         </div>
-                        <div className="secondary-metric">
-                          <div className="metric-number">{momentsLeft}</div>
-                          <div className="metric-text">Visits</div>
+                        <div className="health-metric">
+                          <div className="health-number">{weeksLeft.toLocaleString()}</div>
+                          <div className="health-unit">weeks</div>
                         </div>
+                      </div>
+                      
+                      <div className="health-card moments-time">
+                        <div className="health-card-header">
+                          <div className="health-icon">💫</div>
+                          <div className="health-title">Moments Left</div>
+                        </div>
+                        <div className="health-metric">
+                          <div className="health-number">{momentsLeft.toLocaleString()}</div>
+                          <div className="health-unit">visits</div>
+                        </div>
+                        <div className="health-subtitle">At your current pace</div>
                       </div>
                     </div>
                     
-                    <div className="connection-status">
+                    <div className="health-card connection-card">
+                      <div className="health-card-header">
+                        <div className="health-icon">📞</div>
+                        <div className="health-title">Last Contact</div>
+                      </div>
                       {daysSinceContact !== null ? (
-                        <div className={`last-contact ${daysSinceContact > 7 ? 'overdue' : daysSinceContact > 3 ? 'due-soon' : 'recent'}`}>
-                          <div className="contact-indicator">
-                            <div className="contact-days">{daysSinceContact}</div>
-                            <div className="contact-label">days since last contact</div>
+                        <div className="connection-display">
+                          <div className="health-metric">
+                            <div className="health-number">{daysSinceContact}</div>
+                            <div className="health-unit">days ago</div>
                           </div>
                           {daysSinceContact > 7 && (
-                            <div className="contact-reminder">Time to reach out</div>
+                            <div className="health-alert">⚠️ Time to reach out</div>
+                          )}
+                          {daysSinceContact <= 3 && (
+                            <div className="health-good">✅ Recent contact</div>
                           )}
                         </div>
                       ) : (
-                        <div className="no-contact-data">
-                          <div className="contact-prompt">When did you last connect?</div>
+                        <div className="health-prompt">
+                          <div className="health-icon-large">📱</div>
+                          <div className="health-prompt-text">When did you last connect?</div>
                         </div>
                       )}
                     </div>
                     
-                    <div className="action-section">
-                      <div className="action-prompt">
-                        <h3>How will you measure this relationship?</h3>
-                        <p>Every day counts. Every conversation matters.</p>
+                    <div className="health-actions">
+                      <div className="action-header">
+                        <h3>🎯 Make Every Moment Count</h3>
+                        <p>Choose how to connect with {parent.name} today</p>
                       </div>
                       
-                      <div className="quick-actions">
-                        <button className="action-btn primary" onClick={() => window.open(`tel:${parent.phone || ''}`, '_self')}>
-                          📞 Call Now
+                      <div className="health-action-grid">
+                        <button className="health-action-card primary" onClick={() => window.open(`tel:${parent.phone || ''}`, '_self')}>
+                          <div className="action-icon">📞</div>
+                          <div className="action-text">Call Now</div>
                         </button>
-                        <button className="action-btn secondary" onClick={() => setCurrentScreen('conversations')}>
-                          💬 Start Conversation
+                        <button className="health-action-card" onClick={() => setCurrentScreen('conversations')}>
+                          <div className="action-icon">💬</div>
+                          <div className="action-text">Start Chat</div>
                         </button>
-                        <button className="action-btn secondary" onClick={() => setCurrentScreen('memories')}>
-                          📸 Capture Memory
+                        <button className="health-action-card" onClick={() => setCurrentScreen('memories')}>
+                          <div className="action-icon">📸</div>
+                          <div className="action-text">Capture Memory</div>
+                        </button>
+                        <button className="health-action-card" onClick={() => setCurrentScreen('medical')}>
+                          <div className="action-icon">🏥</div>
+                          <div className="action-text">Medical Info</div>
                         </button>
                       </div>
                     </div>
