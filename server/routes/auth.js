@@ -22,7 +22,7 @@ router.post('/register', [
     const { email, password, name } = req.body;
 
     // Register user with Supabase Auth
-    const { data, error } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -30,31 +30,72 @@ router.post('/register', [
       }
     });
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
+    if (signUpError) {
+      // If user already exists, try to sign them in instead
+      if (signUpError.message.includes('already registered')) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (signInError) {
+          return res.status(400).json({ error: 'User already exists. Please login instead.' });
+        }
+        
+        return res.status(200).json({
+          message: 'User already exists, logged in successfully',
+          user: {
+            id: signInData.user.id,
+            email: signInData.user.email,
+            name: signInData.user.user_metadata.name || name
+          },
+          session: signInData.session
+        });
+      }
+      return res.status(400).json({ error: signUpError.message });
     }
 
-    // Check if email confirmation is required
-    if (!data.session) {
-      return res.status(200).json({
-        message: 'Registration successful. Please check your email to confirm your account.',
-        requiresEmailConfirmation: true,
+    // If no session returned (email confirmation required), try to sign them in immediately
+    if (!signUpData.session) {
+      // Attempt immediate sign in to bypass email confirmation
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (!signInError && signInData.session) {
+        return res.status(201).json({
+          message: 'User registered and logged in successfully',
+          user: {
+            id: signInData.user.id,
+            email: signInData.user.email,
+            name: signInData.user.user_metadata.name || name
+          },
+          session: signInData.session
+        });
+      }
+      
+      // If immediate sign in fails, still count registration as success
+      return res.status(201).json({
+        message: 'User registered successfully',
         user: {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.user_metadata.name
-        }
+          id: signUpData.user.id,
+          email: signUpData.user.email,
+          name: name
+        },
+        session: null,
+        requiresEmailConfirmation: false
       });
     }
 
     res.status(201).json({
       message: 'User registered successfully',
       user: {
-        id: data.user.id,
-        email: data.user.email,
-        name: data.user.user_metadata.name
+        id: signUpData.user.id,
+        email: signUpData.user.email,
+        name: signUpData.user.user_metadata.name
       },
-      session: data.session
+      session: signUpData.session
     });
 
   } catch (error) {

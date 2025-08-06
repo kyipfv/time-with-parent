@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { supabase, isSupabaseConfigured } from './lib/supabase'
 import './App.css'
 
 interface User {
@@ -331,41 +332,72 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(loginForm)
+      // Check if Supabase is configured
+      if (!isSupabaseConfigured()) {
+        // Demo mode login
+        const existingUser = localStorage.getItem('user')
+        if (existingUser) {
+          const userData = JSON.parse(existingUser)
+          if (userData.email === loginForm.email) {
+            localStorage.setItem('isDemoMode', 'true')
+            setUser(userData)
+            
+            // Load demo data
+            const demoData = localStorage.getItem('demoData')
+            if (demoData) {
+              const parsed = JSON.parse(demoData)
+              setParents(parsed.parents || [])
+              setAppointments(parsed.appointments || [])
+              setMedicalNotes(parsed.notes || [])
+            }
+            
+            setCurrentScreen(parents.length === 0 ? 'onboarding' : 'dashboard')
+            return
+          }
+        }
+        setError('Invalid email or password (Demo mode)')
+        return
+      }
+
+      // Try Supabase login
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: loginForm.email,
+        password: loginForm.password
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        if (!data.session || !data.session.access_token) {
-          setError('Login successful but no session token received')
-          return
-        }
-        
-        localStorage.setItem('token', data.session.access_token)
-        localStorage.setItem('user', JSON.stringify(data.user))
-        setUser(data.user)
-        
-        // Check if user has parents
-        const parents = await fetchParents(data.session.access_token)
-        if (parents.length === 0) {
-          setCurrentScreen('onboarding')
-        } else {
-          setCurrentScreen('dashboard')
-          setParents(parents)
-          fetchAppointments(data.session.access_token)
-          fetchMedicalNotes(data.session.access_token)
-        }
-      } else {
-        setError(data.error || 'Login failed')
+      if (signInError) {
+        setError(signInError.message || 'Invalid email or password')
+        return
       }
-    } catch (error) {
-      setError('Network error. Please try again.')
+
+      if (!signInData.session) {
+        setError('Login successful but no session received')
+        return
+      }
+
+      const userData = {
+        id: signInData.user.id,
+        email: signInData.user.email,
+        name: signInData.user.user_metadata?.name || signInData.user.email,
+        birth_date: signInData.user.user_metadata?.birth_date
+      }
+      
+      localStorage.setItem('token', signInData.session.access_token)
+      localStorage.setItem('user', JSON.stringify(userData))
+      setUser(userData)
+      
+      // Check if user has parents
+      const parents = await fetchParents(signInData.session.access_token)
+      if (parents.length === 0) {
+        setCurrentScreen('onboarding')
+      } else {
+        setCurrentScreen('dashboard')
+        setParents(parents)
+        fetchAppointments(signInData.session.access_token)
+        fetchMedicalNotes(signInData.session.access_token)
+      }
+    } catch (error: any) {
+      setError(error.message || 'Login failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -377,36 +409,100 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(registerForm)
+      // Check if Supabase is configured
+      if (!isSupabaseConfigured()) {
+        // Fall back to demo mode
+        const demoUser = {
+          id: 'demo-' + Date.now(),
+          email: registerForm.email,
+          name: registerForm.name,
+          birth_date: registerForm.birthDate
+        }
+        localStorage.setItem('isDemoMode', 'true')
+        localStorage.setItem('user', JSON.stringify(demoUser))
+        setUser(demoUser)
+        setCurrentScreen('onboarding')
+        return
+      }
+
+      // Try Supabase signup
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: registerForm.email,
+        password: registerForm.password,
+        options: {
+          data: { 
+            name: registerForm.name,
+            birth_date: registerForm.birthDate
+          }
+        }
       })
 
-      const data = await response.json()
+      if (signUpError) {
+        // If user already exists, try to sign them in
+        if (signUpError.message.includes('already registered')) {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: registerForm.email,
+            password: registerForm.password
+          })
+          
+          if (!signInError && signInData.session) {
+            const userData = {
+              id: signInData.user.id,
+              email: signInData.user.email,
+              name: signInData.user.user_metadata?.name || registerForm.name,
+              birth_date: signInData.user.user_metadata?.birth_date || registerForm.birthDate
+            }
+            localStorage.setItem('token', signInData.session.access_token)
+            localStorage.setItem('user', JSON.stringify(userData))
+            setUser(userData)
+            setCurrentScreen('onboarding')
+            return
+          }
+          setError('User already exists. Please login instead.')
+          return
+        }
+        throw signUpError
+      }
 
-      if (response.ok) {
-        if (data.requiresEmailConfirmation) {
-          setError('Registration successful! Please check your email to confirm your account, then try logging in.')
-          return
+      // If we got a session, use it
+      if (signUpData.session) {
+        const userData = {
+          id: signUpData.user.id,
+          email: signUpData.user.email,
+          name: registerForm.name,
+          birth_date: registerForm.birthDate
         }
-        
-        if (!data.session || !data.session.access_token) {
-          setError('Registration successful but no session token received')
-          return
-        }
-        
-        localStorage.setItem('token', data.session.access_token)
-        localStorage.setItem('user', JSON.stringify(data.user))
-        setUser(data.user)
+        localStorage.setItem('token', signUpData.session.access_token)
+        localStorage.setItem('user', JSON.stringify(userData))
+        setUser(userData)
         setCurrentScreen('onboarding')
       } else {
-        setError(data.error || 'Registration failed')
+        // No session (email confirmation may be required), try immediate login
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: registerForm.email,
+          password: registerForm.password
+        })
+        
+        if (!signInError && signInData.session) {
+          const userData = {
+            id: signInData.user.id,
+            email: signInData.user.email,
+            name: registerForm.name,
+            birth_date: registerForm.birthDate
+          }
+          localStorage.setItem('token', signInData.session.access_token)
+          localStorage.setItem('user', JSON.stringify(userData))
+          setUser(userData)
+          setCurrentScreen('onboarding')
+        } else {
+          // Registration successful but can't auto-login
+          setError('Account created! Please log in.')
+          setCurrentScreen('login')
+          setLoginForm({ ...loginForm, email: registerForm.email })
+        }
       }
-    } catch (error) {
-      setError('Network error. Please try again.')
+    } catch (error: any) {
+      setError(error.message || 'Registration failed. Please try again.')
     } finally {
       setLoading(false)
     }
