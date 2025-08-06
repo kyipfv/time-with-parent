@@ -46,7 +46,7 @@ interface MedicalNote {
 
 type Screen = 'login' | 'register' | 'onboarding' | 'dashboard' | 'conversations' | 'memories' | 'medical'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3001')
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('login')
@@ -184,6 +184,11 @@ function App() {
       const data = await response.json()
 
       if (response.ok) {
+        if (!data.session || !data.session.access_token) {
+          setError('Login successful but no session token received')
+          return
+        }
+        
         localStorage.setItem('token', data.session.access_token)
         localStorage.setItem('user', JSON.stringify(data.user))
         setUser(data.user)
@@ -225,6 +230,11 @@ function App() {
       const data = await response.json()
 
       if (response.ok) {
+        if (!data.session || !data.session.access_token) {
+          setError('Registration successful but no session token received')
+          return
+        }
+        
         localStorage.setItem('token', data.session.access_token)
         localStorage.setItem('user', JSON.stringify(data.user))
         setUser(data.user)
