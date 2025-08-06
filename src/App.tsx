@@ -101,6 +101,8 @@ function App() {
   const [visitFrequency, setVisitFrequency] = useState(4)
   const [deletingParent, setDeletingParent] = useState<string | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [recentlyDeleted, setRecentlyDeleted] = useState<Parent[]>([])
+  const [showDeleted, setShowDeleted] = useState(false)
   
   // Conversation prompts to help users connect with parents
   const conversationPrompts: ConversationPrompt[] = [
@@ -128,6 +130,10 @@ function App() {
         try {
           const user = JSON.parse(userData)
           setUser(user)
+          // Initialize user birth date if available
+          if (user.birth_date) {
+            setUserBirthDate(user.birth_date)
+          }
           
           // Check if user has parents, if not show onboarding
           try {
@@ -395,6 +401,13 @@ function App() {
       setParents(data.parents || [])
       setAppointments(data.appointments || [])
       setMedicalNotes(data.medicalNotes || [])
+      
+      // If user already has parents, go straight to dashboard
+      if (data.parents && data.parents.length > 0) {
+        setCurrentScreen('dashboard')
+      } else {
+        setCurrentScreen('onboarding')
+      }
     } else {
       // Initialize with minimal default data
       const demoUser = {
@@ -418,10 +431,10 @@ function App() {
       setParents([])
       setAppointments([])
       setMedicalNotes([])
+      setCurrentScreen('onboarding')
     }
     
     localStorage.setItem('isDemoMode', 'true')
-    setCurrentScreen('onboarding') // Start with onboarding to add parents
   }
   
   // Auto-save demo data whenever it changes
@@ -959,10 +972,9 @@ function App() {
                 const parentAge = Math.floor((today.getTime() - parentBirthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25))
                 const userAge = Math.floor((today.getTime() - userBirthDateObj.getTime()) / (1000 * 60 * 60 * 24 * 365.25))
                 
-                // More realistic calculation based on life expectancy and both ages
-                // Average life expectancy around 80-85, but account for current health
-                const estimatedParentLifespan = parentAge > 70 ? 85 : 80
-                const estimatedUserLifespan = 82 // Average
+                // Simplified calculation: assume 90 years life expectancy for everyone
+                const estimatedParentLifespan = 90
+                const estimatedUserLifespan = 90
                 
                 // Years left is limited by whoever might pass first
                 const parentYearsLeft = Math.max(0, estimatedParentLifespan - parentAge)

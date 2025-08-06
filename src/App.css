@@ -701,6 +701,13 @@ body {
   margin-bottom: 12px;
 }
 
+.parent-item-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
 .parent-item {
   display: flex;
   align-items: center;
@@ -711,11 +718,119 @@ body {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  width: 100%;
+  flex: 1;
   text-align: left;
 }
 
 .parent-item:hover {
+  background: #f2f2f7;
+}
+
+.parent-delete-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  color: #8e8e93;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.parent-item-wrapper:hover .parent-delete-btn {
+  opacity: 1;
+}
+
+.parent-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* Recently Deleted Section */
+.deleted-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f2f2f7;
+}
+
+.show-deleted-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: #8e8e93;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  border-radius: 6px;
+}
+
+.show-deleted-btn:hover {
+  background: #f2f2f7;
+}
+
+.deleted-list {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.deleted-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+}
+
+.deleted-name {
+  font-size: 13px;
+  color: #8e8e93;
+  text-decoration: line-through;
+}
+
+.restore-btn {
+  background: rgba(52, 199, 89, 0.1);
+  color: #34c759;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.restore-btn:hover {
+  background: rgba(52, 199, 89, 0.2);
+}
+
+.clear-deleted-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #e5e5e7;
+  border-radius: 6px;
+  color: #8e8e93;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-deleted-btn:hover {
   background: #f2f2f7;
 }
 
