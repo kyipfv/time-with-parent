@@ -22,6 +22,13 @@ interface Parent {
   last_contact?: string
 }
 
+interface ConversationPrompt {
+  id: string
+  category: string
+  question: string
+  description: string
+}
+
 interface MedicalAppointment {
   id: string
   parent_id: string
@@ -85,6 +92,23 @@ function App() {
   const [showAppointmentForm, setShowAppointmentForm] = useState(false)
   const [showNoteForm, setShowNoteForm] = useState(false)
   const [quickNotes, setQuickNotes] = useState<{[parentId: string]: string}>({})
+  const [showConversationPrompts, setShowConversationPrompts] = useState<{[parentId: string]: boolean}>({})
+  
+  // Conversation prompts to help users connect with parents
+  const conversationPrompts: ConversationPrompt[] = [
+    { id: '1', category: 'Memories', question: 'What was your favorite family tradition when you were growing up?', description: 'Learn about their childhood experiences' },
+    { id: '2', category: 'Life Lessons', question: 'What\'s the most important thing you learned from your parents?', description: 'Understand their values and upbringing' },
+    { id: '3', category: 'Dreams', question: 'Is there anywhere in the world you still want to visit?', description: 'Discover their aspirations and bucket list' },
+    { id: '4', category: 'Stories', question: 'Tell me about the day I was born. What do you remember?', description: 'Hear personal stories about your early life' },
+    { id: '5', category: 'Wisdom', question: 'What advice would you give to your younger self?', description: 'Gain insights from their life experience' },
+    { id: '6', category: 'Love', question: 'How did you and mom/dad meet? What was your first impression?', description: 'Learn about their love story and relationships' },
+    { id: '7', category: 'Career', question: 'What did you want to be when you grew up? Did it turn out differently?', description: 'Understand their career journey and dreams' },
+    { id: '8', category: 'Family', question: 'What\'s your favorite memory of our family together?', description: 'Reflect on cherished family moments' },
+    { id: '9', category: 'Health', question: 'How are you feeling lately? Any concerns I should know about?', description: 'Check in on their wellbeing and health' },
+    { id: '10', category: 'Gratitude', question: 'What are you most grateful for in your life right now?', description: 'Share in their appreciation and positivity' },
+    { id: '11', category: 'Current', question: 'What\'s been the highlight of your week so far?', description: 'Stay connected to their daily experiences' },
+    { id: '12', category: 'Future', question: 'What are you looking forward to most this year?', description: 'Learn about their hopes and plans' }
+  ]
 
   // Check for existing session on load
   useEffect(() => {
@@ -831,6 +855,11 @@ function App() {
               </aside>
 
               <main className="main-content">
+              <div className="time-awareness-header">
+                <h1 className="primary-message">⏰ Time is Our Most Precious Gift</h1>
+                <p className="awareness-subtitle">Every call, every visit, every moment with your parents is irreplaceable. Make them count.</p>
+              </div>
+              
               <div className="life-calculator">
                 <div className="calculator-header">
                   <h2>📊 Life Calculation Settings</h2>
@@ -873,7 +902,12 @@ function App() {
                     </select>
                   </div>
                   
-                  <button className="recalculate-btn" onClick={() => window.location.reload()}>
+                  <button className="recalculate-btn" onClick={() => {
+                    // Force re-render by updating a state variable
+                    setQuickNotes(prev => ({ ...prev }))
+                    // Show confirmation
+                    alert('✅ Recalculated! All time estimates have been updated based on your new settings.')
+                  }}>
                     🔄 Recalculate Everything
                   </button>
                 </div>
@@ -1012,10 +1046,53 @@ function App() {
                       )}
                     </div>
                     
+                    <div className="conversation-prompts-section">
+                      <div className="prompts-header">
+                        <h3>💬 Need something to talk about?</h3>
+                        <p>Here are meaningful conversation starters with {parent.name}</p>
+                        <button 
+                          className="toggle-prompts-btn"
+                          onClick={() => setShowConversationPrompts(prev => ({ ...prev, [parent.id]: !prev[parent.id] }))}
+                        >
+                          {showConversationPrompts[parent.id] ? 'Hide' : 'Show'} Conversation Ideas
+                        </button>
+                      </div>
+                      
+                      {showConversationPrompts[parent.id] && (
+                        <div className="conversation-prompts-grid">
+                          {conversationPrompts.slice(0, 3).map(prompt => (
+                            <div key={prompt.id} className="conversation-prompt-card">
+                              <div className="prompt-category">{prompt.category}</div>
+                              <div className="prompt-question">"{prompt.question}"</div>
+                              <div className="prompt-description">{prompt.description}</div>
+                              <button 
+                                className="use-prompt-btn"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(prompt.question)
+                                  alert('Question copied! Now call or text your parent.')
+                                }}
+                              >
+                                📋 Copy Question
+                              </button>
+                            </div>
+                          ))}
+                          <button 
+                            className="get-more-prompts-btn"
+                            onClick={() => {
+                              const randomPrompts = conversationPrompts.sort(() => 0.5 - Math.random()).slice(0, 3)
+                              alert(`Here are 3 more ideas:\n\n• ${randomPrompts.map(p => p.question).join('\n• ')}`)
+                            }}
+                          >
+                            🎲 Get 3 More Ideas
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
                     <div className="health-actions">
                       <div className="action-header">
-                        <h3>🎯 Make Every Moment Count</h3>
-                        <p>Choose how to connect with {parent.name} today</p>
+                        <h3>🎯 Connect Right Now</h3>
+                        <p>Don't wait - reach out to {parent.name} today</p>
                       </div>
                       
                       <div className="health-action-grid">
@@ -1023,7 +1100,14 @@ function App() {
                           <div className="action-icon">📞</div>
                           <div className="action-text">Call Now</div>
                         </button>
-                        <button className="health-action-card" onClick={() => setCurrentScreen('conversations')}>
+                        <button className="health-action-card" onClick={() => {
+                          const choice = confirm('Open WhatsApp Web in browser? (Cancel for WhatsApp mobile app)')
+                          if (choice) {
+                            window.open('https://web.whatsapp.com/', '_blank')
+                          } else {
+                            window.open('https://wa.me/', '_blank')
+                          }
+                        }}>
                           <div className="action-icon">💬</div>
                           <div className="action-text">Start Chat</div>
                         </button>
@@ -1059,20 +1143,26 @@ function App() {
               {parents.length === 0 && (
                 <div className="meaningful-empty-state">
                   <div className="empty-content">
-                    <h2>Time is finite. Love is infinite.</h2>
-                    <p>Add a parent to start measuring what matters most — the time you have left together.</p>
+                    <h2>⏰ How much time do you have left with your parents?</h2>
+                    <p className="time-reality">If your parent is 65 and you call weekly, you might have fewer than 1,000 conversations left together.</p>
                     <div className="empty-stats">
-                      <div className="empty-stat">
-                        <div className="empty-number">~30,000</div>
-                        <div className="empty-label">Average days in a life</div>
+                      <div className="empty-stat urgent">
+                        <div className="empty-number">~8,000</div>
+                        <div className="empty-label">Days from birth to age 22</div>
+                        <div className="empty-note">Most spent with parents</div>
                       </div>
-                      <div className="empty-stat">
+                      <div className="empty-stat precious">
                         <div className="empty-number">?</div>
-                        <div className="empty-label">Days left with your parents</div>
+                        <div className="empty-label">Days remaining together</div>
+                        <div className="empty-note">Let's find out</div>
                       </div>
                     </div>
-                    <button onClick={() => setCurrentScreen('onboarding')} className="meaningful-cta">
-                      Start Measuring What Matters
+                    <div className="wake-up-call">
+                      <h3>🚨 The Wake-Up Call</h3>
+                      <p>Most people realize too late that time with parents is limited. Don't be one of them.</p>
+                    </div>
+                    <button onClick={() => setCurrentScreen('onboarding')} className="meaningful-cta urgent">
+                      ⚡ Start Counting Down
                     </button>
                   </div>
                 </div>
