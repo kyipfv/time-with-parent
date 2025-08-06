@@ -791,6 +791,228 @@ body {
   font-weight: 600;
 }
 
+/* Improved Typography and Edit Features */
+.parent-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1c1c1e;
+  margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+}
+
+.parent-relationship {
+  font-size: 16px;
+  color: #8e8e93;
+  margin: 0 0 8px 0;
+  text-transform: capitalize;
+}
+
+.parent-details {
+  font-size: 15px;
+  color: #6b7280;
+  margin: 0 0 4px 0;
+}
+
+.parent-age {
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.age-separator {
+  margin: 0 8px;
+  color: #cbd5e1;
+}
+
+.user-age {
+  color: #8e8e93;
+}
+
+/* Edit Parent Features */
+.edit-parent-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-left: 12px;
+  opacity: 0.6;
+  transition: all 0.2s;
+  vertical-align: middle;
+}
+
+.edit-parent-btn:hover {
+  opacity: 1;
+  background: rgba(0, 122, 255, 0.1);
+  border-radius: 6px;
+}
+
+.edit-parent-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.edit-input {
+  padding: 8px 12px;
+  border: 1px solid #e5e5e7;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #007aff;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.save-btn, .cancel-btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.save-btn {
+  background: #007aff;
+  color: white;
+}
+
+.save-btn:hover {
+  background: #0056cc;
+}
+
+.cancel-btn {
+  background: #f2f2f7;
+  color: #1c1c1e;
+}
+
+.cancel-btn:hover {
+  background: #e5e5e7;
+}
+
+/* Stats Toggle */
+.stats-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.toggle-stats-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.2s;
+}
+
+.toggle-stats-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Delete Parent Functionality */
+.delete-btn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #dc2626;
+}
+
+.delete-confirmation {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+}
+
+.delete-warning {
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.delete-confirm-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.delete-confirm-input:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.confirm-delete-btn {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-delete-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.confirm-delete-btn:not(:disabled):hover {
+  background: #b91c1c;
+}
+
+.cancel-delete-btn {
+  background: #f2f2f7;
+  color: #1c1c1e;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-delete-btn:hover {
+  background: #e5e5e7;
+}
+
 .main-content {
   flex: 1;
   background: #f2f2f7;
@@ -821,11 +1043,16 @@ body {
   /* Keep auth screens centered and smaller */
   .auth-screen {
     max-width: 400px !important;
-    margin: 0 auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    margin: 0 auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+  
+  .auth-screen .container {
     width: 100%;
+    max-width: 400px;
   }
 }
 

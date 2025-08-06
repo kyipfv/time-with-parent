@@ -93,6 +93,14 @@ function App() {
   const [showNoteForm, setShowNoteForm] = useState(false)
   const [quickNotes, setQuickNotes] = useState<{[parentId: string]: string}>({})
   const [showConversationPrompts, setShowConversationPrompts] = useState<{[parentId: string]: boolean}>({})
+  const [editingParent, setEditingParent] = useState<string | null>(null)
+  const [showStats, setShowStats] = useState(true)
+  const [editForm, setEditForm] = useState<Parent | null>(null)
+  const [userBirthDate, setUserBirthDate] = useState('1990-01-01')
+  const [callFrequency, setCallFrequency] = useState(52)
+  const [visitFrequency, setVisitFrequency] = useState(4)
+  const [deletingParent, setDeletingParent] = useState<string | null>(null)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
   
   // Conversation prompts to help users connect with parents
   const conversationPrompts: ConversationPrompt[] = [
@@ -941,14 +949,7 @@ function App() {
               </div>
 
               {parents.map(parent => {
-                // Get user's custom settings
-                const userBirthDateInput = document.getElementById('userBirthDate') as HTMLInputElement
-                const contactFrequencyInput = document.getElementById('contactFrequency') as HTMLSelectElement
-                const visitFrequencyInput = document.getElementById('visitFrequency') as HTMLSelectElement
-                
-                const userBirthDate = userBirthDateInput?.value || '1990-01-01'
-                const callFrequency = contactFrequencyInput?.value ? parseInt(contactFrequencyInput.value) : 52
-                const visitFrequency = visitFrequencyInput?.value ? parseInt(visitFrequencyInput.value) : 4
+                // Use state variables for calculations
                 
                 // Calculate ages from birth dates
                 const parentBirthDate = new Date(parent.birth_date)
@@ -984,73 +985,160 @@ function App() {
                     <div className="parent-header">
                       <div className="parent-avatar">
                         <div className="avatar-circle">
-                          {parent.name.split(' ').map(n => n[0]).join('')}
+                          {parent.name.charAt(0).toUpperCase()}
                         </div>
                       </div>
                       <div className="parent-identity">
-                        <h2 className="parent-name">{parent.name}</h2>
-                        <p className="parent-relationship">Your {parent.relationship}</p>
-                        <p className="parent-age">{parentAge} years old (you're {userAge})</p>
-                        <p className="parent-birthdate">Born {new Date(parent.birth_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        {editingParent === parent.id ? (
+                          <div className="edit-parent-form">
+                            <input
+                              type="text"
+                              value={editForm?.name || ''}
+                              onChange={(e) => setEditForm(editForm ? {...editForm, name: e.target.value} : null)}
+                              className="edit-input"
+                              placeholder="Name"
+                            />
+                            <input
+                              type="date"
+                              value={editForm?.birth_date || ''}
+                              onChange={(e) => setEditForm(editForm ? {...editForm, birth_date: e.target.value} : null)}
+                              className="edit-input"
+                            />
+                            <select
+                              value={editForm?.relationship || 'mom'}
+                              onChange={(e) => setEditForm(editForm ? {...editForm, relationship: e.target.value as any} : null)}
+                              className="edit-input"
+                            >
+                              <option value="mom">Mom</option>
+                              <option value="dad">Dad</option>
+                              <option value="stepmom">Stepmom</option>
+                              <option value="stepdad">Stepdad</option>
+                              <option value="grandmother">Grandmother</option>
+                              <option value="grandfather">Grandfather</option>
+                              <option value="guardian">Guardian</option>
+                            </select>
+                            <div className="edit-actions">
+                              <button 
+                                className="save-btn"
+                                onClick={() => {
+                                  if (editForm) {
+                                    const updatedParents = parents.map(p => 
+                                      p.id === parent.id ? editForm : p
+                                    )
+                                    setParents(updatedParents)
+                                    setEditingParent(null)
+                                    setEditForm(null)
+                                  }
+                                }}
+                              >
+                                Save
+                              </button>
+                              <button 
+                                className="cancel-btn"
+                                onClick={() => {
+                                  setEditingParent(null)
+                                  setEditForm(null)
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <h2 className="parent-name">
+                              {parent.name}
+                              <button 
+                                className="edit-parent-btn"
+                                onClick={() => {
+                                  setEditingParent(parent.id)
+                                  setEditForm(parent)
+                                }}
+                              >
+                                ✏️
+                              </button>
+                            </h2>
+                            <p className="parent-relationship">Your {parent.relationship}</p>
+                            <p className="parent-details">
+                              <span className="parent-age">{parentAge} years old</span>
+                              <span className="age-separator">•</span>
+                              <span className="user-age">you're {userAge}</span>
+                            </p>
+                            <p className="parent-birthdate">Born {new Date(parent.birth_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                          </>
+                        )}
+                      </div>
+                      <div className="stats-toggle">
+                        <button 
+                          className="toggle-stats-btn"
+                          onClick={() => setShowStats(!showStats)}
+                          title={showStats ? 'Hide statistics' : 'Show statistics'}
+                        >
+                          {showStats ? '👁️' : '👁️‍🗨️'}
+                        </button>
                       </div>
                     </div>
                     
-                    <div className="health-metrics-grid">
-                      <div className="health-card primary-time">
-                        <div className="health-card-header">
-                          <div className="health-icon">🌟</div>
-                          <div className="health-title">Days to Connect</div>
+                    {showStats && (
+                      <div className="health-metrics-grid">
+                        <div className="health-card primary-time">
+                          <div className="health-card-header">
+                            <div className="health-icon">🌟</div>
+                            <div className="health-title">DAYS TO CONNECT</div>
+                          </div>
+                          <div className="health-metric">
+                            <div className="health-number">{daysLeft.toLocaleString()}</div>
+                            <div className="health-unit">beautiful days</div>
+                          </div>
+                          <div className="health-subtitle">≈ {yearsLeftTogether} years of memories to make</div>
                         </div>
-                        <div className="health-metric">
-                          <div className="health-number">{daysLeft.toLocaleString()}</div>
-                          <div className="health-unit">beautiful days</div>
-                        </div>
-                        <div className="health-subtitle">≈ {yearsLeftTogether} years of memories to make</div>
-                      </div>
                       
-                      <div className="health-card secondary-time">
-                        <div className="health-card-header">
-                          <div className="health-icon">💬</div>
-                          <div className="health-title">Conversations Ahead</div>
+                        <div className="health-card secondary-time">
+                          <div className="health-card-header">
+                            <div className="health-icon">💬</div>
+                            <div className="health-title">CONVERSATIONS AHEAD</div>
+                          </div>
+                          <div className="health-metric">
+                            <div className="health-number">{callsLeft.toLocaleString()}</div>
+                            <div className="health-unit">chats to enjoy</div>
+                          </div>
+                          <div className="health-subtitle">Stories to share</div>
                         </div>
-                        <div className="health-metric">
-                          <div className="health-number">{callsLeft.toLocaleString()}</div>
-                          <div className="health-unit">chats to enjoy</div>
+                        
+                        <div className="health-card moments-time">
+                          <div className="health-card-header">
+                            <div className="health-icon">🤗</div>
+                            <div className="health-title">HUGS & VISITS</div>
+                          </div>
+                          <div className="health-metric">
+                            <div className="health-number">{visitsLeft.toLocaleString()}</div>
+                            <div className="health-unit">gatherings</div>
+                          </div>
+                          <div className="health-subtitle">Hugs to give</div>
                         </div>
-                        <div className="health-subtitle">Stories to share</div>
                       </div>
-                      
-                      <div className="health-card moments-time">
-                        <div className="health-card-header">
-                          <div className="health-icon">🤗</div>
-                          <div className="health-title">Hugs & Visits</div>
-                        </div>
-                        <div className="health-metric">
-                          <div className="health-number">{visitsLeft.toLocaleString()}</div>
-                          <div className="health-unit">gatherings</div>
-                        </div>
-                        <div className="health-subtitle">Hugs to give</div>
-                      </div>
-                    </div>
+                    )}
                     
-                    <div className="total-moments-card">
-                      <div className="health-card-header">
-                        <div className="health-icon">🎉</div>
-                        <div className="health-title">Moments to Create Together</div>
+                    {showStats && (
+                      <div className="total-moments-card">
+                        <div className="health-card-header">
+                          <div className="health-icon">🎉</div>
+                          <div className="health-title">MOMENTS TO CREATE TOGETHER</div>
+                        </div>
+                        <div className="health-metric large">
+                          <div className="health-number">{totalMomentsLeft.toLocaleString()}</div>
+                          <div className="health-unit">opportunities to connect</div>
+                        </div>
+                        <div className="health-breakdown">
+                          {callsLeft.toLocaleString()} laughs on the phone + {visitsLeft.toLocaleString()} warm embraces
+                        </div>
                       </div>
-                      <div className="health-metric large">
-                        <div className="health-number">{totalMomentsLeft.toLocaleString()}</div>
-                        <div className="health-unit">opportunities to connect</div>
-                      </div>
-                      <div className="health-breakdown">
-                        {callsLeft.toLocaleString()} laughs on the phone + {visitsLeft.toLocaleString()} warm embraces
-                      </div>
-                    </div>
+                    )}
                     
                     <div className="health-card connection-card">
                       <div className="health-card-header">
                         <div className="health-icon">📞</div>
-                        <div className="health-title">Last Contact</div>
+                        <div className="health-title">LAST CONTACT</div>
                       </div>
                       {daysSinceContact !== null ? (
                         <div className="connection-display">
