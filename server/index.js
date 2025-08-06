@@ -41,10 +41,7 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve static files from the frontend build
-app.use(express.static(path.join(__dirname, '../dist')));
-
-// API Routes
+// API Routes (before static files to ensure they take precedence)
 app.use('/api/auth', authRoutes);
 app.use('/api/parents', parentRoutes);
 app.use('/api/appointments', appointmentRoutes);
@@ -55,14 +52,30 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// 404 handler for API routes (must come before catch-all)
+// 404 handler for API routes
 app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
 });
 
-// Catch-all handler: send back frontend's index.html file for any non-API routes
+// Serve static files from the frontend build with proper headers
+app.use(express.static(path.join(__dirname, '../dist'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    } else if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
+
+// Catch-all handler: send back frontend's index.html file for any non-static, non-API routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+  // Only send HTML for routes that don't look like static assets
+  if (!req.path.includes('.')) {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  } else {
+    res.status(404).send('File not found');
+  }
 });
 
 // Error handling middleware
