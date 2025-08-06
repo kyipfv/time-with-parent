@@ -1059,8 +1059,11 @@ function App() {
                           <div className="dog-nose"></div>
                           <div className="dog-mouth"></div>
                         </div>
+                        <div className="dog-collar"></div>
                       </div>
                       <div className="dog-tail"></div>
+                      <div className="paw left"></div>
+                      <div className="paw right"></div>
                     </div>
                   </div>
                   

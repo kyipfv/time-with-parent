@@ -921,51 +921,124 @@ body {
   gap: 32px;
 }
 
-/* Cute CSS Dog */
+/* Super Cute CSS Dog */
 .pet-dog {
   position: relative;
-  width: 120px;
-  height: 120px;
-  animation: bounce 2s ease-in-out infinite;
+  width: 140px;
+  height: 140px;
+  animation: bounce 4s ease-in-out infinite;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.pet-dog:hover {
+  transform: scale(1.05);
 }
 
 .dog-body {
   position: relative;
-  width: 80px;
-  height: 60px;
-  background: #8b4513;
+  width: 90px;
+  height: 70px;
+  background: linear-gradient(135deg, #f4a460, #daa520);
   border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-  margin: 30px auto 0;
+  margin: 40px auto 0;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Add spots to body */
+.dog-body::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: #8b4513;
+  border-radius: 50%;
+  top: 15px;
+  left: 15px;
+  opacity: 0.4;
+  animation: spot-pulse 3s ease-in-out infinite;
+}
+
+.dog-body::after {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background: #8b4513;
+  border-radius: 50%;
+  top: 30px;
+  right: 20px;
+  opacity: 0.4;
+  animation: spot-pulse 3s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+/* Cute collar */
+.dog-collar {
+  position: absolute;
+  width: 100%;
+  height: 12px;
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+  bottom: -8px;
+  left: 0;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dog-collar::after {
+  content: '🏷️';
+  position: absolute;
+  font-size: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -2px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 .dog-head {
   position: absolute;
-  width: 60px;
-  height: 60px;
-  background: #8b4513;
-  border-radius: 50%;
-  top: -25px;
+  width: 70px;
+  height: 65px;
+  background: linear-gradient(135deg, #f4a460, #daa520);
+  border-radius: 50% 50% 45% 45%;
+  top: -30px;
   left: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
+/* Floppy ears */
 .dog-ear {
   position: absolute;
-  width: 25px;
-  height: 40px;
-  background: #654321;
-  border-radius: 100% 0;
+  width: 35px;
+  height: 50px;
+  background: linear-gradient(135deg, #8b4513, #a0522d);
+  border-radius: 70% 30% 80% 20%;
+  box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.1);
 }
 
 .dog-ear.left {
-  transform: rotate(-40deg);
-  left: -5px;
-  top: -5px;
+  transform: rotate(-25deg);
+  left: -10px;
+  top: 5px;
+  animation: ear-flop-left 4s ease-in-out infinite;
 }
 
 .dog-ear.right {
-  transform: rotate(40deg) scaleX(-1);
-  right: -5px;
-  top: -5px;
+  transform: rotate(25deg) scaleX(-1);
+  right: -10px;
+  top: 5px;
+  animation: ear-flop-right 4s ease-in-out infinite;
+}
+
+@keyframes ear-flop-left {
+  0%, 100% { transform: rotate(-25deg); }
+  50% { transform: rotate(-35deg); }
+}
+
+@keyframes ear-flop-right {
+  0%, 100% { transform: rotate(25deg) scaleX(-1); }
+  50% { transform: rotate(35deg) scaleX(-1); }
 }
 
 .dog-face {
@@ -974,67 +1047,165 @@ body {
   height: 100%;
 }
 
+/* Bigger, cuter eyes */
 .dog-eye {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 18px;
+  height: 22px;
   background: #000;
   border-radius: 50%;
-  top: 20px;
+  top: 22px;
+  animation: blink 4s ease-in-out infinite;
 }
 
 .dog-eye.left {
-  left: 15px;
+  left: 18px;
+  animation-delay: 0.1s;
 }
 
 .dog-eye.right {
-  right: 15px;
+  right: 18px;
 }
 
+/* Eye sparkles */
+.dog-eye::before {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  top: 3px;
+  right: 3px;
+}
+
+.dog-eye::after {
+  content: '';
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: white;
+  border-radius: 50%;
+  bottom: 5px;
+  left: 3px;
+}
+
+/* Cute button nose */
 .dog-nose {
   position: absolute;
-  width: 8px;
-  height: 6px;
+  width: 12px;
+  height: 10px;
   background: #000;
-  border-radius: 50%;
-  bottom: 18px;
+  border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Happy smile */
 .dog-mouth {
   position: absolute;
-  width: 20px;
-  height: 10px;
-  border: 2px solid #000;
+  width: 30px;
+  height: 15px;
+  border: 3px solid #000;
   border-top: none;
-  border-radius: 0 0 20px 20px;
-  bottom: 10px;
+  border-radius: 0 0 30px 30px;
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
 }
 
+/* Pink tongue */
+.dog-mouth::before {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 10px;
+  background: #ff69b4;
+  border-radius: 50% 50% 50% 50%;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: pant 2s ease-in-out infinite;
+}
+
+/* Wagging tail */
 .dog-tail {
   position: absolute;
-  width: 30px;
-  height: 30px;
-  background: #8b4513;
-  border-radius: 50%;
-  right: -20px;
-  top: 10px;
+  width: 40px;
+  height: 40px;
+  right: -25px;
+  top: 15px;
   transform-origin: center;
-  animation: wag 0.5s ease-in-out infinite alternate;
+}
+
+.dog-tail::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #8b4513, #a0522d);
+  border-radius: 50% 10% 50% 10%;
+  transform: rotate(45deg);
+  animation: wag 0.8s ease-in-out infinite;
+}
+
+/* Front paws */
+.dog-body .paw {
+  position: absolute;
+  width: 20px;
+  height: 25px;
+  background: linear-gradient(135deg, #f4a460, #daa520);
+  border-radius: 50% 50% 40% 40%;
+  bottom: -20px;
+}
+
+.dog-body .paw.left {
+  left: 15px;
+}
+
+.dog-body .paw.right {
+  right: 15px;
 }
 
 /* Dog Animations */
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { 
+    transform: translateY(0) rotate(0deg); 
+  }
+  25% { 
+    transform: translateY(-8px) rotate(-2deg); 
+  }
+  50% { 
+    transform: translateY(-15px) rotate(0deg); 
+  }
+  75% { 
+    transform: translateY(-8px) rotate(2deg); 
+  }
 }
 
 @keyframes wag {
-  0% { transform: rotate(-20deg); }
-  100% { transform: rotate(20deg); }
+  0% { transform: rotate(-30deg); }
+  25% { transform: rotate(-35deg); }
+  50% { transform: rotate(30deg); }
+  75% { transform: rotate(35deg); }
+  100% { transform: rotate(-30deg); }
+}
+
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+@keyframes pant {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.2); }
+}
+
+@keyframes spot-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.1); }
 }
 
 /* Mood States */
@@ -1053,8 +1224,8 @@ body {
   transform: rotate(45deg);
 }
 
-.pet-dog.happy .dog-tail {
-  animation: wag 0.3s ease-in-out infinite alternate;
+.pet-dog.happy .dog-tail::before {
+  animation: wag 0.5s ease-in-out infinite;
 }
 
 /* Pet Info Section */
