@@ -8,7 +8,7 @@
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
     "client:dev": "vite",
     "server:dev": "cd server && npm run dev",
-    "build": "vite build && npm run server:install",
+    "build": "npm install && vite build && cd server && npm install --production",
     "client:build": "vite build",
     "server:install": "cd server && npm install --production",
     "start": "cd server && npm start",
@@ -19,20 +19,24 @@
     "concurrently": "^9.2.0",
     "framer-motion": "^12.23.12",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.30.1",
+    "react-dom": "^19.1.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.1",
     "eslint": "^9.30.1",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.35.1",
-    "vite": "^7.0.4"
+    "typescript-eslint": "^8.35.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "keywords": ["parent", "family", "healthcare", "relationships", "caregiving"],
   "author": "ParentOS Team",
